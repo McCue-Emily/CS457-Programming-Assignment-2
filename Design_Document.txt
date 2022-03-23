@@ -1,0 +1,193 @@
+Title: Programming Assignment 1
+Author: Emily McCue
+Due Date: March 29, 2022
+Class: CS 457, Section 1001
+Professor: Prof. Zhao
+
+Overview:
+    In this assignment, you will write a program that allows a database user to manage the metadata of their relational 
+    data. By metadata, we mean the database’s high-level information (e.g., database’s name, creation time, owner) as 
+    well as the properties of the tables (e.g., table’s names, attributes, constraints).
+
+System Design:
+    One directory -> database
+    One file -> table
+
+Database and Table Management:
+    The program organizes multiple databases by storing each database as a directory in the Programming Assignment 1
+    folder. In order to not create duplicate databases, each time a new database is requested to be created, the new
+    database's inputted name is stored as a string and the Programming Assignment 1 folder is combed through to see
+    if that name is already in use. If it has, it exits the request and displays to the user that it was unable to
+    complete the request because a database with that name already exists. If there is no database with the inputted
+    database name in the Programming Assignment 1 folder, then a database with that name is created and it displays
+    to the user that the database was created successfully.
+
+    The program manages multiple tables by storing each table as a file in each respective database (directory)
+    that was in use when the table was created. In order to create a table, a database must be in use as inputted by
+    the user. If there is no database in use, no table may be created. Once a database is in use, to create
+    a table, the inputted name of the table to be created is stored as a string and the database is combed through to
+    check if a file with the same name exists already. If the name is already in use, it exits the request and displays
+    to the user that it was unable to complete the request because a table with that name already exists in the
+    database that is currently in use. If the name is not in use, a file with the inputted name is created and stored
+    in the database in use. This allows the user to have tables with the same name as long as they are stored in
+    different databases, and prevents the user from creating duplicately named tables in the same database.
+
+Implementation of Functionalities:
+    Using C++ language, functionalities have been created including database creation and deletion, and table creation,
+    deletion, update and query.
+
+    Database creation -- consists of creating a directory with the name inputted by the user. The inputted command from 
+        user is stored as an array and passed into the tokenize() function. This function tokenizes the input and stores
+        the first token as a string. This string is checked to see if we are using a database, or if we are operating
+        outside of a database. If we are operating outside of a database, the tokens are passed into the notUsing()
+        function which returns a boolean that either continues or ends the program. The notUsing() function takes the
+        next token and stores it as a string. This is then compared against the possible options (CREATE or DROP). To 
+        create, the tokens are passed to the create() function. The create() function stores the next token as a string
+        and compares it to the possible options at this point (DATABASE, or an error message is displayed). If it 
+        matches this, it stores the next token (the database name) as a char*, removes the semicolon ';', and then 
+        stores this as a string. It then calls the function databaseExists() and passes the database name stored as a 
+        string to it. This checks if the database already exists. If the database does not exist, a database is created
+        with the inputted database name as it's name and a succes message is displayed to the screen. If the database 
+        already exists, a failure message is displayed to the screen and the create() function finishes. It returns to
+        the notUsing() function, where the boolean false is returned to the function tokenize(). Tokenize now returns
+        this result (false) to main where the while loop continues because exit still is equal to false. The terminal
+        is now ready for another command from the user.
+
+    Database deletion -- consists of deleting the directory with the name inputted by the user. The inputted command from 
+        user is stored as an array and passed into the tokenize() function. This function tokenizes the input and stores
+        the first token as a string. This string is checked to see if we are using a database, or if we are operating
+        outside of a database. If we are operating outside of a database, the tokens are passed into the notUsing()
+        function which returns a boolean that either continues or ends the program. The notUsing() function takes the
+        next token and stores it as a string. This is then compared against the possible options (CREATE or DROP). To 
+        drop, the tokens are passed to the drop() function. The drop() function stores the next token as a string
+        and compares it to the possible options at this point (DATABASE, or an error message is displayed). If it 
+        matches this, it stores the next token (the database name) as a char*, removes the semicolon ';', and then 
+        stores this as a string. It then calls the function databaseExists() and passes the database name stored as a 
+        string to it. This checks if the database already exists.  If the database already exists, the database with 
+        the inputted name is deleted and a succes message is displayed to the screen. If the database does not exist, a
+        failure message is displayed to the screen and the create() function finishes. It returns to the notUsing() 
+        function, where the boolean false is returned to the function tokenize(). Tokenize now returns this result 
+        (false) to main where the while loop continues because exit still is equal to false. The terminal is now ready
+        for another command from the user.
+
+    Table creation -- consists of creating a file with the inputted name in the database that is actively being used.
+        The inputted command from user is stored as an array and passed into the tokenize() function. This function 
+        tokenizes the input and stores the first token as a string. This string is checked to see if we are using a 
+        database, or if we are operating outside of a database. If the user has not previously selected a database to
+        be operating in, table creation will not succeed because it will go into the notUsing() function which does
+        not have table making capabilities because one can only create a table if opeating inside of database. If a
+        database has been selected to be in use previously, the command USE "database name" would have been used which
+        would return true to the first if statement in tokenize(). The next token is then stored as a string and the
+        semicolon ';' is removed. This string is then passed into the function databaseExists() which returns true if
+        the database exists. If it returns false, it falls to the else { } of the second if/else statement and an error
+        message is displayed and tokenize boolean is returned as false. The terminal is then ready for another command
+        from the user. If it returns true, a success message is displayed, and the string with the database name
+        stored is passed to the function nowUsing(). In the nowUsing() function, a boolean and char array is 
+        initialized. A while loop with the previously declared boolean as it's condition begins. This while loop
+        prompts the user for another command from the terminal and stores it in the char array. This is then tokenized
+        and the first token is stored as a string. The semicolon ';' is removed from the token if it exists and the 
+        token is then compared to the functionalities available while operating within a database. If the token is
+        equal to "CREATE", then the tokens and the name of the database in use is passed to the function createTB().
+        This function stores the next token as a string and checks to see if it is equal to "TABLE". If it is not
+        equal, then an error message displays, the program finishes and the terminal is ready for another command from
+        the user. If it is equal, the next token (table name) is stored as a string and the semicolon ';' is removed.
+        The path to the table is created by concatenating the database in uses name, a forward slash '/', the table
+        name, and the file type '.txt'. It then stores the remaining tokens (the data to be stored in table) to a
+        string variable. If this string is not empty (there were no more tokens), the commas ',' are replaced with
+        pipes '|' and the beginning and end parentheses '()' are removed. The path to the table is then passed to the
+        function tableExists() and if it returns true (table already exists in database), an error message is 
+        displayed to the screen and the terminal is ready for a new command from user. If if returns false (table does
+        not exist in database), the table is created in the database, the formatted remaining tokens are inserted
+        into the table, the table is closed, a success message is displayed, and the function ends and is returned to
+        the nowUsing() function where the loop continues. The terminal is now ready for another command from the user.
+
+    Table deletion -- consists of deleting the file with the inputted name in the database that is actively being used.
+        The inputted command from user is stored as an array and passed into the tokenize() function. This function 
+        tokenizes the input and stores the first token as a string. This string is checked to see if we are using a 
+        database, or if we are operating outside of a database. If the user has not previously selected a database to
+        be operating in, table creation will not succeed because it will go into the notUsing() function which does
+        not have table making capabilities because one can only create a table if opeating inside of database. If a
+        database has been selected to be in use previously, the command USE "database name" would have been used which
+        would return true to the first if statement in tokenize(). The next token is then stored as a string and the
+        semicolon ';' is removed. This string is then passed into the function databaseExists() which returns true if
+        the database exists. If it returns false, it falls to the else { } of the second if/else statement and an error
+        message is displayed and tokenize boolean is returned as false. The terminal is then ready for another command
+        from the user. If it returns true, a success message is displayed, and the string with the database name
+        stored is passed to the function nowUsing(). In the nowUsing() function, a boolean and char array is 
+        initialized. A while loop with the previously declared boolean as it's condition begins. This while loop
+        prompts the user for another command from the terminal and stores it in the char array. This is then tokenized
+        and the first token is stored as a string. The semicolon ';' is removed from the token if it exists and the 
+        token is then compared to the functionalities available while operating within a database. If the token is
+        equal to "DROP", then the tokens and the name of the database in use is passed to the function dropTB().
+        This function stores the next token as a string and checks to see if it is equal to "TABLE". If it is not
+        equal, then an error message displays, the program finishes and the terminal is ready for another command from
+        the user. If it is equal, the next token (table name) is stored as a string and the semicolon ';' is removed.
+        The path to the table is created by concatenating the database in uses name, a forward slash '/', the table
+        name, and the file type '.txt'. The path to the table is then passed to the function tableExists() and if it 
+        returns true (table already exists in database), an error message is displayed to the screen and the terminal 
+        is ready for a new command from user. If if returns false (table does not exist in database), an error message
+        is displayed, the function ends, the nowUsing() loop continues, and the terminal is ready for another command
+        from the user. If it returns true (table does exist in database), the table is deleted, the function ends, the
+        nowUsing() loop continues, and the terminal is ready for another command from the user.
+
+    Table update -- consists of altering the table by tokenizing the user input, processing the type of update being 
+        requested, and updating the table based on the request. The inputted command from user is stored as an array 
+        and passed into the tokenize() function. This function tokenizes the input and stores the first token as a 
+        string. This string is checked to see if we are using a database, or if we are operating outside of a database. 
+        If the user has not previously selected a database to be operating in, table creation will not succeed because 
+        it will go into the notUsing() function which does not have table making capabilities because one can only 
+        create a table if opeating inside of database. If a database has been selected to be in use previously, the 
+        command USE "database name" would have been used which would return true to the first if statement in 
+        tokenize(). The next token is then stored as a string and the semicolon ';' is removed. This string is then 
+        passed into the function databaseExists() which returns true if the database exists. If it returns false, it 
+        falls to the else { } of the second if/else statement and an error message is displayed and tokenize boolean 
+        is returned as false. The terminal is then ready for another command from the user. If it returns true, a 
+        success message is displayed, and the string with the database name stored is passed to the function 
+        nowUsing(). In the nowUsing() function, a boolean and char array is initialized. A while loop with the 
+        previously declared boolean as it's condition begins. This while loop prompts the user for another command 
+        from the terminal and stores it in the char array. This is then tokenized and the first token is stored as 
+        a string. The semicolon ';' is removed from the token if it exists and the token is then compared to the 
+        functionalities available while operating within a database. If the token is equal to "ALTER", then the 
+        tokens and the name of the database in use is passed to the function alter(). This function stores the next 
+        token as a string and checks to see if it is equal to "TABLE". If it is not equal, then an error message 
+        displays, the program finishes and the terminal is ready for another command from the user. If it is equal, 
+        the next token (table name) is stored as a string. The path to the table is created by concatenating the 
+        database in use's name, a forward slash '/', the table name, and the file type '.txt'. The next token is then 
+        stored as a string, and is checked in an if loop to be equal to the possible functionalities (ADD). If it 
+        does not equal a functionality, an error message displays, the program finishes and the terminal is ready 
+        for another command from the user. The rest of the tokens are stored to a string, the semicolon ';' is 
+        removed, and if the string is not empty, the commas ',' are replaced by piping '|' and the parentheses 
+        '()' are removed. The table path is then passed to tableExists(). If it returns false (table does not 
+        exist), an error message displays, the program finishes and the terminal is ready for another command from 
+        the user. If it returns true (table exists), the modified remaining token string is appended to the table
+        and a success message is displayed, the function ends, the nowUsing() loop continues, and the terminal is 
+        ready for another command from the user.
+
+    Table query -- consists of selecting the table by tokenizing the user input, processing what is being requested to
+        select, and then displaying what has been requested. The inputted command from user is stored as an array and 
+        passed into the tokenize() function. This function tokenizes the input and stores the first token as a string. 
+        This string is checked to see if we are using a database, or if we are operating outside of a database. If the 
+        user has not previously selected a database to be operating in, table creation will not succeed because it 
+        will go into the notUsing() function which does not have table making capabilities because one can only create 
+        a table if opeating inside of database. If a database has been selected to be in use previously, the command 
+        USE "database name" would have been used which would return true to the first if statement in tokenize(). The 
+        next token is then stored as a string and the semicolon ';' is removed. This string is then passed into the 
+        function databaseExists() which returns true if the database exists. If it returns false, it falls to the 
+        else { } of the second if/else statement and an error message is displayed and tokenize boolean is returned 
+        as false. The terminal is then ready for another command from the user. If it returns true, a success message 
+        is displayed, and the string with the database name stored is passed to the function nowUsing(). In the 
+        nowUsing() function, a boolean and char array is initialized. A while loop with the previously declared 
+        boolean as it's condition begins. This while loop prompts the user for another command from the terminal and 
+        stores it in the char array. This is then tokenized and the first token is stored as a string. The semicolon
+        ';' is removed from the token if it exists and the token is then compared to the functionalities available 
+        while operating within a database. If the token is equal to "SELECT", then the tokens and the name of the 
+        database in use is passed to the function select(). The next three tokens are stored as individual string
+        variables and the semicolon is removed from the last one. The path to the table is created by concatenating
+        the database in use's name, a forward slash '/', the table name, and the file type '.txt'. The first token
+        is compared to the functionalities available (*) and the second token is compared to the functionalities
+        available (FROM). If they are not equal, an error message displays, the function finishes and the terminal 
+        is ready for another command from the user. If they are equal, the table path is passed to the function
+        tableExists(). If it returns false (table does not exist), an error message displays, the function finishes 
+        and the terminal is ready for another command from the user. If it returns true (table exists), the contents
+        of the file is displayed to the terminal, the the function finishes and the terminal is ready for another 
+        command from the user.
