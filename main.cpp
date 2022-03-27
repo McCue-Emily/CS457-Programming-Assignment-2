@@ -674,10 +674,10 @@ void deleteData(char* useLoopTokens, string dbName) {
 bool modifyTable(string totalPath, string dataName, string operand, string data) {
     
     /*
-    delete from product 
+    delete from Product 
     where name = 'Gizmo';
 
-    delete from product 
+    delete from Product 
     where price > 150;
     */
 
@@ -687,7 +687,7 @@ bool modifyTable(string totalPath, string dataName, string operand, string data)
     int verticalBarCounter = 0;
     int numOfModifications = 0;
 
-    getline(deleteData, tableHeader[200]);
+    deleteData.getline(tableHeader, 200);
 
     char* dataTokens = strtok(tableHeader, "|");
     char* temp = dataTokens;
@@ -697,6 +697,7 @@ bool modifyTable(string totalPath, string dataName, string operand, string data)
         dataTokens = strtok(tableHeader, "|");
         parseLine = dataTokens;
         verticalBarCounter++;
+        cout << "bars counted: " << verticalBarCounter;
     }
 
     cout << "3" << endl;
