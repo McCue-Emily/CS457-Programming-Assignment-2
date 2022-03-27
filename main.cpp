@@ -1,7 +1,7 @@
 /*
     Author: Emily McCue
-    Title: Programming Assignment 1
-    Due Date: March 21, 2022
+    Title: Programming Assignment 2
+    Due Date: March 29, 2022
             ---
     Class: CS 457, Section 1001
     Professor: Prof. Zhao
@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <stdio.h>
 #include <cstring>
 #include <algorithm>
@@ -19,7 +20,7 @@
 
 using namespace std;
 
-bool tokenize(char userInput[50]);
+bool tokenize(char userInput[200]);
 void nowUsing(string useDBName);
 void createTB(char* useLoopTokens, string dbName);
 void dropTB(char* useLoopTokens, string useDBName);
@@ -30,16 +31,19 @@ bool tableExists(string totalPath);
 void drop(char* tokens);
 void alter(char* useLoopTokens, string dbName);
 void select(char* useLoopTokens, string dbName);
+void insert(char* useLoopTokens, string dbName);
+void deleteData(char* useLoopTokens, string dbName);
+bool modifyTable(string totalPath, string dataName, string operand, string data);
 
 int main() {
 
     bool exit = false;
-    char userInput[50];
+    char userInput[200];
     
-    cout << "-- CS457 PA1" << endl << endl;
+    cout << "-- CS457 PA2" << endl << endl;
 
     while(exit == false) {
-        cin.getline(userInput, 50);
+        cin.getline(userInput, 200);
         exit = tokenize(userInput);
     }
 
@@ -56,7 +60,7 @@ int main() {
     @param userInput which is the user inputted command
     @return boolean value T/F which decides if we continue or exit
 */
-bool tokenize(char userInput[50]) {
+bool tokenize(char userInput[200]) {
     
     char* tokens = strtok(userInput, " ");
     string token1 = tokens;
@@ -102,11 +106,11 @@ bool tokenize(char userInput[50]) {
 void nowUsing(string useDBName) {
 
     bool exitUseLoop = false;
-    char userInputUseLoop[50];
+    char userInputUseLoop[200];
 
     while (exitUseLoop == false) {
 
-        cin.getline(userInputUseLoop, 50);
+        cin.getline(userInputUseLoop, 200);
         char* useLoopTokens = strtok(userInputUseLoop, " ");
         char* charToken1 = useLoopTokens;
         string token1 = charToken1;
@@ -139,9 +143,13 @@ void nowUsing(string useDBName) {
             dropTB(useLoopTokens, useDBName);
         } else if (token1 == "ALTER") {
             alter(useLoopTokens, useDBName);
-        } else if (token1 == "SELECT") {
+        } else if (token1 == "SELECT" || token1 == "select") {
             select(useLoopTokens, useDBName);
-        } else if (token1 == ".EXIT") {
+        } else if (token1 == "insert") {
+            insert(useLoopTokens, useDBName);
+        } else if (token1 == "delete") {
+            deleteData(useLoopTokens, useDBName);
+        } else if (token1 == ".EXIT" || token1 == ".exit") {
             cout << "-- All done." << endl;
             exitUseLoop = true;
         } else {
@@ -281,7 +289,7 @@ bool notUsing(char* tokens) {
         create(tokens);
     } else if (functionName == "DROP") {
         drop(tokens);
-    } else if (functionName == ".EXIT") {
+    } else if (functionName == ".EXIT" || functionName == ".exit") {
         cout << "-- All done." << endl;
         return true;
     } else {
@@ -513,7 +521,7 @@ void select(char* useLoopTokens, string dbName) {
     string totalPath = dbName + "/" + tbName + ".txt";
 
 
-    if (selectCheck == "*" && strFromToken == "FROM") {
+    if (selectCheck == "*" && (strFromToken == "FROM" || strFromToken == "from")) {
         bool exists;
         exists = tableExists(totalPath);
 
@@ -533,5 +541,196 @@ void select(char* useLoopTokens, string dbName) {
     } else {
         cout << " -- Invalid input." << endl;
     }
+
+}
+
+void insert(char* useLoopTokens, string dbName) {
+
+    useLoopTokens = strtok(NULL, " ");
+    char* charPointName = useLoopTokens;
+    string pointToTB = charPointName;
+
+    if (pointToTB == "into") {
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charTBName = useLoopTokens;
+        string tbName = charTBName;
+
+        string totalPath = dbName + "/" + tbName + ".txt";
+
+        useLoopTokens = strtok(NULL, "(");
+        char* howToAlter = useLoopTokens;
+        string strHowToAlter = howToAlter;
+
+        if (strHowToAlter == "values") {
+
+            useLoopTokens = strtok(NULL, " ");
+            char* charRestOfTokens = useLoopTokens;
+            string restOfTokens = charRestOfTokens;
+
+            char* tempVar;
+
+            while ((useLoopTokens = strtok(NULL, " ")) != NULL) {
+                tempVar = useLoopTokens;
+                restOfTokens = restOfTokens + " " + tempVar;
+            }
+
+            size_t pos;
+            while ((pos = restOfTokens.find(";")) != string::npos) {
+                restOfTokens.replace(pos, 1, "");
+            }
+
+            while ((pos = restOfTokens.find(")")) != string::npos) {
+                restOfTokens.replace(pos, 1, "");
+            }
+
+            if (!restOfTokens.empty()) {
+                string original = ",";
+                string replacement = " |";
+                while ((pos = restOfTokens.find(original)) != string::npos) {
+                    restOfTokens.replace(pos, 1, replacement);
+                }
+            }
+            
+            bool exists = tableExists(totalPath);
+    
+            if (exists) {
+                fstream modifyTB;
+                modifyTB.open(totalPath.c_str(), fstream::app);
+                modifyTB << "\n" << restOfTokens;
+                modifyTB.close();
+                cout << "-- 1 new record inserted." << endl;
+            } else {
+                cout << "-- !Failed to insert record into table " << tbName << " because it does not exist." << endl;
+            }
+        }
+
+    } else {
+        cout << "-- Invalid input." << endl;
+    }
+}
+
+void deleteData(char* useLoopTokens, string dbName) {
+
+    useLoopTokens = strtok(NULL, " ");
+    char* fromToken = useLoopTokens;
+    string pointToTB = fromToken;
+
+    if (pointToTB == "from") {
+        useLoopTokens = strtok(NULL, " ");
+        char* charTBName = useLoopTokens;
+        string tbName = charTBName;
+
+        string totalPath = dbName + "/" + tbName + ".txt";
+
+        useLoopTokens = strtok(NULL, " ");
+        char* whereToken = useLoopTokens;
+        string pointToValue = whereToken;
+
+        if (pointToValue == "where") {
+
+            size_t pos;
+            while ((pos = tbName.find(";")) != string::npos) {
+                tbName.replace(pos, 1, "");
+            }
+
+            useLoopTokens = strtok(NULL, " ");
+            char* dataNameToken = useLoopTokens;
+            string dataName = dataNameToken;
+
+            useLoopTokens = strtok(NULL, " ");
+            char* operatorToken = useLoopTokens;
+            string operand = operatorToken;
+
+            useLoopTokens = strtok(NULL, " ");
+            char* dataToken = useLoopTokens;
+            string data = dataToken;
+
+            bool exists = tableExists(totalPath);
+
+            if (exists) {
+
+                bool success;
+                success = modifyTable(totalPath, dataName, operand, data);
+
+                if (success) {
+                    cout << "-- 1 record modified" << endl;
+                } else {
+                    cout << "-- Error modifying file, try again." << endl;
+                }
+            } else {
+                cout << "-- !Failed to modify table " << tbName << " because it does not exist." << endl;
+
+            }
+
+        }
+
+    } else {
+        cout << "-- Invalid input." << endl;
+    }
+
+}
+
+bool modifyTable(string totalPath, string dataName, string operand, string data) {
+    
+    /*
+    delete from product 
+    where name = 'Gizmo';
+
+    delete from product 
+    where price > 150;
+    */
+
+    fstream deleteData(totalPath);
+    string tempData;
+    char tableHeader[200];
+    int verticalBarCounter = 0;
+    int numOfModifications = 0;
+
+    getline(deleteData, tableHeader[200]);
+
+    char* dataTokens = strtok(tableHeader, "|");
+    char* temp = dataTokens;
+    string parseLine = temp;
+
+    while (parseLine.find(dataName) == string::npos) {
+        dataTokens = strtok(tableHeader, "|");
+        parseLine = dataTokens;
+        verticalBarCounter++;
+    }
+
+    cout << "3" << endl;
+
+    char charOperand = operand[0];
+
+    switch(charOperand) {
+        case '>':
+            break;
+        case '<':
+            break;
+        case '=':
+            cout << "=" << endl;
+            break;
+        default:
+            cout << "-- Invalid operand." << endl;
+    }
+
+    cout << "4" << endl;
+
+    while (getline(deleteData, tempData)) {
+        char processLine[200];
+        string strWords;
+        for (int i = 0; i < verticalBarCounter; i++) {
+            char* words = strtok(processLine, "|");
+            strWords = words;
+        }
+        if (data == strWords) {
+            //tempData.replace(tempData.find(deleteline),deleteline.length(),"");
+            numOfModifications++;
+            cout << "# of modifications: " << numOfModifications << endl;
+        }
+    }
+
+    return true;
 
 }

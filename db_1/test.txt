@@ -1,0 +1,4 @@
+int char | seven eleven | copa cabana
+1 | 'gizmo' | 19.99)
+2 | 'booze' | cruise)
+how | to | be
