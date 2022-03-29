@@ -875,26 +875,22 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
         case '=':
             if (firstLine.find(dataName) != string::npos) {
 
-                cout << "found data name in first line" << endl;
                 tempFile << firstLine;
 
-                while(getline(tableInUse, line)) {
+                while (getline(tableInUse, line)) {
 
-                    cout << "reading each line" << endl;
                     if (line.find(data) != string::npos) {
                         counter++;
-                        cout << "counter: " << counter << endl;
                     } else {
                         tempFile << endl << line;
-                        cout << "line: " << line << endl;
                     }
+
                 }
+
                 tableInUse.close();
                 tempFile.close();
-                cout << "files closed" << endl;
                 remove(totalPath.c_str());
                 rename(tempPath.c_str(), totalPath.c_str());
-                cout << "files renamed and deleted" << endl;
                 if (counter == 1) {
                     cout << "-- " << counter << " record modified" << endl;
                 } else {
