@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cstdio>
 #include <algorithm>
+#include <vector>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -32,6 +33,7 @@ bool tableExists(string totalPath);
 void drop(char* tokens);
 void alter(char* useLoopTokens, string dbName);
 void select(char* useLoopTokens, string dbName);
+bool printSelect(string dataArray[200], string dbName, string totalPath, string dataName, string operand, string data);
 void insert(char* useLoopTokens, string dbName);
 void deleteData(char* useLoopTokens, string dbName);
 bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data);
@@ -506,23 +508,22 @@ void select(char* useLoopTokens, string dbName) {
     char* selectToken = useLoopTokens;
     string selectCheck = selectToken;
 
-    useLoopTokens = strtok(NULL, " ");
-    char* fromToken = useLoopTokens;
-    string strFromToken = fromToken;
+    if (selectCheck == "*") {
+        useLoopTokens = strtok(NULL, " ");
+        char* fromToken = useLoopTokens;
+        string strFromToken = fromToken;
 
-    useLoopTokens = strtok(NULL, " ");
-    char* tbNameToken = useLoopTokens;
-    string tbName = tbNameToken;
-    
-    size_t pos;
-    while ((pos = tbName.find(";")) != string::npos) {
-        tbName.replace(pos, 1, "");
-    }
+        useLoopTokens = strtok(NULL, " ");
+        char* tbNameToken = useLoopTokens;
+        string tbName = tbNameToken;
+        
+        size_t pos;
+        while ((pos = tbName.find(";")) != string::npos) {
+            tbName.replace(pos, 1, "");
+        }
 
-    string totalPath = dbName + "/" + tbName + ".txt";
+        string totalPath = dbName + "/" + tbName + ".txt";
 
-
-    if (selectCheck == "*" && (strFromToken == "FROM" || strFromToken == "from")) {
         bool exists;
         exists = tableExists(totalPath);
 
@@ -530,7 +531,7 @@ void select(char* useLoopTokens, string dbName) {
             string tempVar;
             ifstream printFile (totalPath.c_str());
             if (printFile.is_open()) {
-                while (! printFile.eof()) {
+                while (!printFile.eof()) {
                     getline(printFile, tempVar);
                     cout << tempVar << endl;
                 }
@@ -540,8 +541,175 @@ void select(char* useLoopTokens, string dbName) {
             cout << "-- !Failed to query table " << tbName << " because it does not exist." << endl;
         }
     } else {
-        cout << " -- Invalid input." << endl;
+
+        /*
+        select name, price from Product where pid != 2;
+        */
+
+        int dataCounter = 0;
+        string dataArray[200];
+        size_t found;
+
+        while (selectCheck.back() == ',') {
+            while ((found = selectCheck.find(",")) != string::npos) {
+                selectCheck.replace(found, 1, "");
+            }
+            dataArray[dataCounter] = selectCheck;
+            useLoopTokens = strtok(NULL, " ");
+            selectToken = useLoopTokens;
+            selectCheck = selectToken;
+            dataCounter++;
+        }
+        
+        dataArray[dataCounter] = selectCheck;
+        dataCounter++;
+
+        for (int i = 0; i < dataCounter; i++) {
+            cout << dataArray[i] << endl;
+        }
+
+        useLoopTokens = strtok(NULL, " ");
+        char* fromToken = useLoopTokens;
+        string strFromToken = fromToken;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* tbToken = useLoopTokens;
+        string tbName = tbToken;
+
+        string totalPath = dbName + "/" + tbName + ".txt";
+
+        useLoopTokens = strtok(NULL, " ");
+        char* whereToken = useLoopTokens;
+        string strWhereToken = whereToken;
+
+        if (strWhereToken == "where") {
+
+            useLoopTokens = strtok(NULL, " ");
+            char* dataNameToken = useLoopTokens;
+            string dataName = dataNameToken;
+
+            useLoopTokens = strtok(NULL, " ");
+            char* operandToken = useLoopTokens;
+            string operand = operandToken;
+
+            useLoopTokens = strtok(NULL, " ");
+            char* dataToken = useLoopTokens;
+            string data = dataToken;
+
+            size_t pos;
+            while ((pos = data.find(";")) != string::npos) {
+                data.replace(pos, 1, "");
+            }
+
+            bool exists = tableExists(totalPath);
+
+            if (exists) {
+
+                bool success;
+                success = printSelect(dataArray, dbName, totalPath, dataName, operand, data);
+
+                if (!success) {
+                    cout << "-- Error querying file, try again." << endl;
+                }
+            } else {
+                cout << "-- !Failed to query table " << tbName << " because it does not exist." << endl;
+
+            }
+
+        } else {
+        cout << "-- Invalid input." << endl;
+        }
+
     }
+
+}
+
+bool printSelect(string dataArray[200], string dbName, string totalPath, string dataName, string operand, string data) {
+    
+        /*
+        select name, price from Product where pid != 2;
+        */
+
+    string tempVar;
+    ifstream printFile (totalPath.c_str());
+    string line;
+    string token;
+    int counter = 0;
+    const char delim = '|';
+    size_t start;
+    size_t end = 0;
+    char printTokens[200];
+    char* tempLine;
+
+    char tokenizeLine[200];
+
+    // if (exists) {
+    //         string tempVar;
+    //         ifstream printFile (totalPath.c_str());
+    //         if (printFile.is_open()) {
+    //             while (!printFile.eof()) {
+    //                 getline(printFile, tempVar);
+    //                 cout << tempVar << endl;
+    //             }
+    //         }
+    //         printFile.close();
+    //     } else {
+    //         cout << "-- !Failed to query table " << tbName << " because it does not exist." << endl;
+    //     }
+
+    if (operand == "!=") {
+        if (printFile.is_open()) {
+            while (token != dataName) {
+                printFile >> token;
+                if (token == "|") {
+                    counter++;
+                    printFile >> token;
+                }
+            }
+            // while (!printFile.eof()) {
+
+            //     // getline(printFile, line);
+            //     // printTokens.push_back(line);
+            //     // tempLine = strtok(printTokens, "|");
+
+            //     vector<string> out;
+                
+            //     stringstream ss(line);
+            
+            //     //string s;
+            //     while (getline(ss, line, delim)) {
+            //         out.push_back(line);
+            //     }
+
+            //     for (auto &line: out) {
+            //         cout << line << endl;
+            //     }
+
+            //     // getline(printFile, tempVar);
+            //     // if (tempVar.find(data) == string::npos) {
+            //     //     cout << tempVar << endl;
+            //     // }
+
+            // }
+        }
+        printFile.close();
+        return true;
+    } else {
+        return false;
+    }
+
+    // if (printFile.is_open()) {
+    //     while (!printFile.eof()) {
+    //         getline(printFile, tempVar);
+    //         if (tempVar.find(data) == string::npos) {
+    //             cout << tempVar << endl;
+    //         }
+    //     }
+    //     printFile.close();
+    //     return true;
+    // }
+    // printFile.close();
+    // return false;
 
 }
 
@@ -646,6 +814,9 @@ void deleteData(char* useLoopTokens, string dbName) {
             useLoopTokens = strtok(NULL, " ");
             char* dataToken = useLoopTokens;
             string data = dataToken;
+            while ((pos = data.find(";")) != string::npos) {
+                data.replace(pos, 1, "");
+            }
 
             bool exists = tableExists(totalPath);
 
@@ -654,9 +825,7 @@ void deleteData(char* useLoopTokens, string dbName) {
                 bool success;
                 success = modifyTable(dbName, totalPath, dataName, operand, data);
 
-                if (success) {
-                    cout << "-- 1 record modified" << endl;
-                } else {
+                if (!success) {
                     cout << "-- Error modifying file, try again." << endl;
                 }
             } else {
@@ -682,20 +851,20 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
     ifstream tableInUse;
     tableInUse.open(totalPath);
 
-    string tempPath = dbName + "/Reading.txt";
+    string tempPath = dbName + "/Writing.txt";
     ofstream tempFile;
     tempFile.open(tempPath);
 
     string firstLine;
     string line;
+    int counter = 0;
+    // stringstream ss;
+    // string tempToken;
+    // float found;
 
     for (int i = 0; i < 1; i++) {
         getline(tableInUse, firstLine);
     }
-
-    cout << "first line of text file: " << firstLine << endl;
-    cout << "data name: " << dataName << endl;
-    cout << "data trying to find to delete line: " << data << endl;
 
     char charOperand = operand[0];
     switch(charOperand) {
@@ -706,161 +875,119 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
         case '=':
             if (firstLine.find(dataName) != string::npos) {
 
+                cout << "found data name in first line" << endl;
                 tempFile << firstLine;
 
-                while (getline(tableInUse, line)) {
-                    // size_t found = line.find(data);
-                    // if (found != string::npos) {
-                    //     tempFile << endl << line;
-                    // }
-                }
+                while(getline(tableInUse, line)) {
 
+                    cout << "reading each line" << endl;
+                    if (line.find(data) != string::npos) {
+                        counter++;
+                        cout << "counter: " << counter << endl;
+                    } else {
+                        tempFile << endl << line;
+                        cout << "line: " << line << endl;
+                    }
+                }
                 tableInUse.close();
                 tempFile.close();
+                cout << "files closed" << endl;
                 remove(totalPath.c_str());
                 rename(tempPath.c_str(), totalPath.c_str());
-
+                cout << "files renamed and deleted" << endl;
+                if (counter == 1) {
+                    cout << "-- " << counter << " record modified" << endl;
+                } else {
+                    cout << "-- " << counter << " records modified" << endl;
+                }
             } else {
-                cout << "-- error." << endl;
+                cout << "-- Error modifying records." << endl;
                 tableInUse.close();
                 tempFile.close();
                 remove(tempPath.c_str());
                 return false;
             }
             break;
-
-
-//     fstream deleteData(totalPath);
-//     string tempData;
-//     char tableHeader[200];
-//     int positionCount = 0;
-//     int realPosition;
-//     int verticalBarCounter = 0;
-//     int numOfModifications = 0;
-
-//     deleteData.getline(tableHeader, 200);
-//     char* dataTokens = strtok(tableHeader, "|");
-
-//     while (dataTokens != NULL) {
-//         char* temp = dataTokens;
-//         string parseTokens = temp;
-
-//         if (parseTokens.at(0) == ' ') {
-//             parseTokens.erase(0,1);
-//         }
-
-//         size_t found = parseTokens.find(dataName);
-//         if (found != string::npos) {
-//             realPosition = positionCount;
-//         }
-
-//         positionCount++;
-//         dataTokens = strtok(NULL, "|");
-//     }
-
-//     char charOperand = operand[0];
-//     char tableContents[200];
-
-//     deleteData.getline(tableContents, 200);
-//     int arrSize = sizeof(tableContents)/sizeof(tableContents[0]);
-
-//     // char* tempToken = strtok(tableContents, "|");
-//     // string dataVar = tempToken;
-
-//     string line;
-//     fstream tempFile("temp.txt");
-//    // deleteData.open();
-
-//     switch(charOperand) {
-//         case '>':
-//             cout << ">" << endl;
-//             break;
-//         case '<':
-//             cout << "<" << endl;
-//             break;
-//         case '=':
-//             cout << "=" << endl;
-
-//             if (deleteData.is_open()) {
-//                 cout << "open" << endl;
-//                 while (getline(deleteData, line)) {
-//                     cout << "getting lines" << endl;
-//                     if (line.find(data) == string::npos) {
-//                         cout << "tempfile receiving lines" << endl;
-//                         tempFile << line;
-//                     }
-//                 }
-//             } else {
-//                 cout << "-- error." << endl;
-//                 return false;
-//             }
-//             // while (getline(deleteData, line)) {
-//             //     deleteData.getline(tableContents, 200);
-//             //     for (int i = 0; i < realPosition; i++) {
-
-//             //         tempToken = strtok(NULL, "|");
-//             //         dataVar = tempToken;
-
-//             //         cout << "replace complete" << endl;
-
-//             //     }
-//             //     if (line.find(data)) {
-
-//             //     }
-
-//             //     arrSize = sizeof(tableContents)/sizeof(tableContents[0]);
-//             //     fill_n(tableContents, arrSize, 0);
-
-//             // }
-
-//             // }
-
-//             // // read.close();
-//             // // write.close();
-//             // std::remove("infos.txt");
-//             // std::rename("tmp.txt", "infos.txt");
-//             //         */
-
-
-//             // while (getline(deleteData, dataVar)) {
-//             //     if (dataVar.find(data) != string::npos) {
-
-
-//             //         dataVar.replace(dataVar.find(data), dataVar.length(), "");
-//             //     }
-//             // }
-//             // for (int i = 0; i < realPosition; i++) {
-//             //     tempToken = dataTokens;
-//             //     tableData = tempToken;
-//             //     char* dataTokens = strtok(NULL, "|");
-//             // }
-//             // if (data.find(tableData) != string::npos) {
-//             //     return true;
-//             // }
-//             break;
-//         default:
-//             cout << "-- Invalid operand." << endl;
-//     }
-
-//     deleteData.close();
-//     tempFile.close();
-
-//     std::rename("temp.txt", totalPath.c_str());
-
-//     while (getline(deleteData, tempData)) {
-//         char processLine[200];
-//         string strWords;
-//         for (int i = 0; i < realPosition; i++) {
-//             char* words = strtok(processLine, "|");
-//             strWords = words;
-//         }
-//         if (data == strWords) {
-//             //tempData.replace(tempData.find(deleteline),deleteline.length(),"");
-//             numOfModifications++;
-//             cout << "# of modifications: " << numOfModifications << endl;
-//         }
-//     }
+    }
 
     return true;
 
 }
+            // float numData = stof(data);
+            // if (firstLine.find(dataName) != string::npos) {
+            //     cout << "outer loop" << endl;
+            //     tempFile << firstLine;
+            //     while (getline(tableInUse, line)) {
+            //         cout << "inner loop" << endl;
+            //         if (line.find(data) != string::npos) {
+            //             counter++;
+            //         } else {
+            //             tempFile << endl << line;
+            //         }
+            //     }
+            //     tableInUse.close();
+            //     tempFile.close();
+            //     remove(totalPath.c_str());
+            //     rename(tempPath.c_str(), totalPath.c_str());
+            //     if (counter == 1) {
+            //         cout << "-- " << counter << " record modified" << endl;
+            //     } else {
+            //         cout << "-- " << counter << " records modified" << endl;
+            //     }
+            // } else {
+            //     cout << "-- Error modifying records." << endl;
+            //     tableInUse.close();
+            //     tempFile.close();
+            //     remove(tempPath.c_str());
+            //     return false;
+            // }
+            // break;
+            // if (firstLine.find(dataName) != string::npos) {
+                
+            //     cout << "outer loop" << endl;
+            //     tempFile << firstLine;
+
+            //     while (getline(tableInUse, line)) {
+
+            //         cout << "inner loop" << endl;
+            //         istringstream iss(line);
+            //         while (!(iss >> found).fail()) {
+
+            //             cout << "found int: " << found << endl;
+
+            //             // ss << tempToken;
+            //             // cout << "temptoken: " << tempToken << endl;
+
+            //             // if (stringstream(tempToken) >> found) {
+
+            //             //     cout << "found int: " << found << endl;
+
+            //             //     if (found > numData) {
+            //             //         counter++;
+            //             //     } else {
+            //             //         tempFile << endl << line;
+            //             //     }
+            //             // }
+            //             // tempToken = "";
+            //             // ss.str(string());
+
+            //         }
+
+            //     }
+
+            //     tableInUse.close();
+            //     tempFile.close();
+            //     remove(totalPath.c_str());
+            //     rename(tempPath.c_str(), totalPath.c_str());
+            //     if (counter == 1) {
+            //         cout << "-- " << counter << " record modified" << endl;
+            //     } else {
+            //         cout << "-- " << counter << " records modified" << endl;
+            //     }
+            // } else {
+            //     cout << "-- Error modifying records." << endl;
+            //     tableInUse.close();
+            //     tempFile.close();
+            //     remove(tempPath.c_str());
+            //     return false;
+            // }
