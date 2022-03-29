@@ -13,6 +13,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <cstring>
+#include <cstdio>
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -33,7 +34,7 @@ void alter(char* useLoopTokens, string dbName);
 void select(char* useLoopTokens, string dbName);
 void insert(char* useLoopTokens, string dbName);
 void deleteData(char* useLoopTokens, string dbName);
-bool modifyTable(string totalPath, string dataName, string operand, string data);
+bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data);
 
 int main() {
 
@@ -651,7 +652,7 @@ void deleteData(char* useLoopTokens, string dbName) {
             if (exists) {
 
                 bool success;
-                success = modifyTable(totalPath, dataName, operand, data);
+                success = modifyTable(dbName, totalPath, dataName, operand, data);
 
                 if (success) {
                     cout << "-- 1 record modified" << endl;
@@ -671,66 +672,194 @@ void deleteData(char* useLoopTokens, string dbName) {
 
 }
 
-bool modifyTable(string totalPath, string dataName, string operand, string data) {
+bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data) {
     
     /*
-    delete from Product 
-    where name = 'Gizmo';
-
-    delete from Product 
-    where price > 150;
+    delete from Product where name = 'Gizmo';
+    delete from Product where price > 150;
     */
 
-    fstream deleteData(totalPath);
-    string tempData;
-    char tableHeader[200];
-    int verticalBarCounter = 0;
-    int numOfModifications = 0;
+    ifstream tableInUse;
+    tableInUse.open(totalPath);
 
-    deleteData.getline(tableHeader, 200);
+    string tempPath = dbName + "/Reading.txt";
+    ofstream tempFile;
+    tempFile.open(tempPath);
 
-    char* dataTokens = strtok(tableHeader, "|");
-    char* temp = dataTokens;
-    string parseLine = temp;
+    string firstLine;
+    string line;
 
-    while (parseLine.find(dataName) == string::npos) {
-        dataTokens = strtok(tableHeader, "|");
-        parseLine = dataTokens;
-        verticalBarCounter++;
-        cout << "bars counted: " << verticalBarCounter;
+    for (int i = 0; i < 1; i++) {
+        getline(tableInUse, firstLine);
     }
 
-    cout << "3" << endl;
+    cout << "first line of text file: " << firstLine << endl;
+    cout << "data name: " << dataName << endl;
+    cout << "data trying to find to delete line: " << data << endl;
 
     char charOperand = operand[0];
-
     switch(charOperand) {
         case '>':
             break;
         case '<':
             break;
         case '=':
-            cout << "=" << endl;
+            if (firstLine.find(dataName) != string::npos) {
+
+                tempFile << firstLine;
+
+                while (getline(tableInUse, line)) {
+                    // size_t found = line.find(data);
+                    // if (found != string::npos) {
+                    //     tempFile << endl << line;
+                    // }
+                }
+
+                tableInUse.close();
+                tempFile.close();
+                remove(totalPath.c_str());
+                rename(tempPath.c_str(), totalPath.c_str());
+
+            } else {
+                cout << "-- error." << endl;
+                tableInUse.close();
+                tempFile.close();
+                remove(tempPath.c_str());
+                return false;
+            }
             break;
-        default:
-            cout << "-- Invalid operand." << endl;
-    }
 
-    cout << "4" << endl;
 
-    while (getline(deleteData, tempData)) {
-        char processLine[200];
-        string strWords;
-        for (int i = 0; i < verticalBarCounter; i++) {
-            char* words = strtok(processLine, "|");
-            strWords = words;
-        }
-        if (data == strWords) {
-            //tempData.replace(tempData.find(deleteline),deleteline.length(),"");
-            numOfModifications++;
-            cout << "# of modifications: " << numOfModifications << endl;
-        }
-    }
+//     fstream deleteData(totalPath);
+//     string tempData;
+//     char tableHeader[200];
+//     int positionCount = 0;
+//     int realPosition;
+//     int verticalBarCounter = 0;
+//     int numOfModifications = 0;
+
+//     deleteData.getline(tableHeader, 200);
+//     char* dataTokens = strtok(tableHeader, "|");
+
+//     while (dataTokens != NULL) {
+//         char* temp = dataTokens;
+//         string parseTokens = temp;
+
+//         if (parseTokens.at(0) == ' ') {
+//             parseTokens.erase(0,1);
+//         }
+
+//         size_t found = parseTokens.find(dataName);
+//         if (found != string::npos) {
+//             realPosition = positionCount;
+//         }
+
+//         positionCount++;
+//         dataTokens = strtok(NULL, "|");
+//     }
+
+//     char charOperand = operand[0];
+//     char tableContents[200];
+
+//     deleteData.getline(tableContents, 200);
+//     int arrSize = sizeof(tableContents)/sizeof(tableContents[0]);
+
+//     // char* tempToken = strtok(tableContents, "|");
+//     // string dataVar = tempToken;
+
+//     string line;
+//     fstream tempFile("temp.txt");
+//    // deleteData.open();
+
+//     switch(charOperand) {
+//         case '>':
+//             cout << ">" << endl;
+//             break;
+//         case '<':
+//             cout << "<" << endl;
+//             break;
+//         case '=':
+//             cout << "=" << endl;
+
+//             if (deleteData.is_open()) {
+//                 cout << "open" << endl;
+//                 while (getline(deleteData, line)) {
+//                     cout << "getting lines" << endl;
+//                     if (line.find(data) == string::npos) {
+//                         cout << "tempfile receiving lines" << endl;
+//                         tempFile << line;
+//                     }
+//                 }
+//             } else {
+//                 cout << "-- error." << endl;
+//                 return false;
+//             }
+//             // while (getline(deleteData, line)) {
+//             //     deleteData.getline(tableContents, 200);
+//             //     for (int i = 0; i < realPosition; i++) {
+
+//             //         tempToken = strtok(NULL, "|");
+//             //         dataVar = tempToken;
+
+//             //         cout << "replace complete" << endl;
+
+//             //     }
+//             //     if (line.find(data)) {
+
+//             //     }
+
+//             //     arrSize = sizeof(tableContents)/sizeof(tableContents[0]);
+//             //     fill_n(tableContents, arrSize, 0);
+
+//             // }
+
+//             // }
+
+//             // // read.close();
+//             // // write.close();
+//             // std::remove("infos.txt");
+//             // std::rename("tmp.txt", "infos.txt");
+//             //         */
+
+
+//             // while (getline(deleteData, dataVar)) {
+//             //     if (dataVar.find(data) != string::npos) {
+
+
+//             //         dataVar.replace(dataVar.find(data), dataVar.length(), "");
+//             //     }
+//             // }
+//             // for (int i = 0; i < realPosition; i++) {
+//             //     tempToken = dataTokens;
+//             //     tableData = tempToken;
+//             //     char* dataTokens = strtok(NULL, "|");
+//             // }
+//             // if (data.find(tableData) != string::npos) {
+//             //     return true;
+//             // }
+//             break;
+//         default:
+//             cout << "-- Invalid operand." << endl;
+//     }
+
+//     deleteData.close();
+//     tempFile.close();
+
+//     std::rename("temp.txt", totalPath.c_str());
+
+//     while (getline(deleteData, tempData)) {
+//         char processLine[200];
+//         string strWords;
+//         for (int i = 0; i < realPosition; i++) {
+//             char* words = strtok(processLine, "|");
+//             strWords = words;
+//         }
+//         if (data == strWords) {
+//             //tempData.replace(tempData.find(deleteline),deleteline.length(),"");
+//             numOfModifications++;
+//             cout << "# of modifications: " << numOfModifications << endl;
+//         }
+//     }
 
     return true;
 
