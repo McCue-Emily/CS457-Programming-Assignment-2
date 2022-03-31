@@ -725,6 +725,15 @@ void update(char* useLoopTokens, string useDBName) {
 
     // update "tbName" set "tbProperty" = "new value" where "tbProperty" = "old value"
 
+    int dataNameToBeSetPosition;
+    int dataNameBeingSetPosition;
+    int dataNameToBeSetCounter = 0;
+    int dataNameBeingSet = 0;
+    int counter = 0;
+    string firstLine;
+    string tempToken;
+    string line;
+
     useLoopTokens = strtok(NULL, " ");
     char* charTBName = useLoopTokens;
     string tbName = charTBName;
@@ -765,6 +774,64 @@ void update(char* useLoopTokens, string useDBName) {
         useLoopTokens = strtok(NULL, " ");
         char* charDataToBeChanged = useLoopTokens;
         string dataToBeChanged = charDataToBeChanged;
+
+        ifstream tableInUse;
+        tableInUse.open(totalPath);
+
+        string tempPath = dbName + "/Writing.txt";
+        ofstream tempFile;
+        tempFile.open(tempPath);
+
+        for (int i = 0; i < 1; i++) {
+            getline(tableInUse, firstLine);
+        }
+
+        if (firstLine.find(dataNameToBeSet) != string::npos && firstLine.find(dataNameBeingSet) != string::npos) {
+            // find the positions of both data names in firstLine
+            istringstream firstStream(firstLine);
+
+            while (firstStream) {
+                string tempWord1;
+                firstStream >> tempWord1;
+                if (tempWord1.find(dataNameToBeSet) != string::npos) {
+                    dataNameToBeSetPosition = dataNameToBeSetCounter;
+                    istringstream secondStream(firstLine);
+                    while (secondStream) {
+                        string tempWord2;
+                        secondStream >> tempWord2;
+                        if (tempWord2.find(dataNameBeingSet) != string::npos) {
+                            dataNameBeingSetPosition = dataNameBeingSetCounter;
+                        } else if (tempWord2 == "|") {
+                            dataNameBeingSetCounter++;
+                        }
+                    }
+                } else if (tempWord1 == "|") {
+                    dataNameToBeSetCounter++;
+                }
+            }
+            dataNameToBeSetCounter += dataNameToBeSetCounter;
+            dataNameBeingSetCounter += dataNameBeingSetCounter;
+
+            tempFile << firstLine;
+
+            while (getline(tableInUse, line)) {
+                istringstream thirdStream(line);
+                bool keepGoing = true;
+
+                while (thirdStream && keepGoing) {
+                    string tempWord3;
+
+                    for (int j = 0; j < dataNameBeingSetCounter; j++) {
+                        thirdStream >> tempWord3;
+                    }
+                    if (tempWord3 == dataNameBeingSet) {
+                        
+                        // it they're equal, replace the data name to be set data value with the 
+                        // data name being set data value and print
+                    }
+                }
+            }
+        }
 
     } else {
         cout << "-- !Failed to update table " << tbName << " because it does not exist." << endl;
