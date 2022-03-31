@@ -33,14 +33,11 @@ bool tableExists(string totalPath);
 void drop(char* tokens);
 void alter(char* useLoopTokens, string dbName);
 void select(char* useLoopTokens, string dbName);
-bool printSelect(string dataArray[200], string dbName, string totalPath, string dataName, string operand, string data);
+bool printSelect(string dataArray[200], int dataCounter, string dbName, string totalPath, string dataName, string operand, string data);
+void update(char* useLoopTokens, string useDBName);
 void insert(char* useLoopTokens, string dbName);
 void deleteData(char* useLoopTokens, string dbName);
 bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data);
-
-// insert into "tbName" values(" ");
-// update "tbName" set "tbProperty" = "new value" where "tbProperty" = "old value"
-// select "tbProperty", "tbProperty" from "tbName" where "tbProperty" != "value"
 
 int main() {
 
@@ -154,6 +151,8 @@ void nowUsing(string useDBName) {
             select(useLoopTokens, useDBName);
         } else if (token1 == "insert") {
             insert(useLoopTokens, useDBName);
+        } else if (token1 == "update") {
+            update(useLoopTokens, useDBName);
         } else if (token1 == "delete") {
             deleteData(useLoopTokens, useDBName);
         } else if (token1 == ".EXIT" || token1 == ".exit") {
@@ -546,10 +545,6 @@ void select(char* useLoopTokens, string dbName) {
         }
     } else {
 
-        /*
-        select name, price from Product where pid != 2;
-        */
-
         int dataCounter = 0;
         string dataArray[200];
         size_t found;
@@ -567,10 +562,6 @@ void select(char* useLoopTokens, string dbName) {
         
         dataArray[dataCounter] = selectCheck;
         dataCounter++;
-
-        for (int i = 0; i < dataCounter; i++) {
-            cout << dataArray[i] << endl;
-        }
 
         useLoopTokens = strtok(NULL, " ");
         char* fromToken = useLoopTokens;
@@ -610,7 +601,7 @@ void select(char* useLoopTokens, string dbName) {
             if (exists) {
 
                 bool success;
-                success = printSelect(dataArray, dbName, totalPath, dataName, operand, data);
+                success = printSelect(dataArray, dataCounter, dbName, totalPath, dataName, operand, data);
 
                 if (!success) {
                     cout << "-- Error querying file, try again." << endl;
@@ -628,92 +619,156 @@ void select(char* useLoopTokens, string dbName) {
 
 }
 
-bool printSelect(string dataArray[200], string dbName, string totalPath, string dataName, string operand, string data) {
-    
-        /*
-        select name, price from Product where pid != 2;
-        */
+bool printSelect(string dataArray[200], int dataCounter, string dbName, string totalPath, string dataName, string operand, string data) {
 
-    string tempVar;
-    ifstream printFile (totalPath.c_str());
+    int dataNamePosition;
+    int dataNameCounter = 0;
+    int indexCounter = 0;
+    string firstLine;
+    string tempToken;
     string line;
-    string token;
-    int counter = 0;
-    const char delim = '|';
-    size_t start;
-    size_t end = 0;
-    char printTokens[200];
-    char* tempLine;
 
-    char tokenizeLine[200];
+    ifstream tableInUse;
+    tableInUse.open(totalPath);
 
-    // if (exists) {
-    //         string tempVar;
-    //         ifstream printFile (totalPath.c_str());
-    //         if (printFile.is_open()) {
-    //             while (!printFile.eof()) {
-    //                 getline(printFile, tempVar);
-    //                 cout << tempVar << endl;
-    //             }
-    //         }
-    //         printFile.close();
-    //     } else {
-    //         cout << "-- !Failed to query table " << tbName << " because it does not exist." << endl;
-    //     }
-
-    if (operand == "!=") {
-        if (printFile.is_open()) {
-            while (token != dataName) {
-                printFile >> token;
-                if (token == "|") {
-                    counter++;
-                    printFile >> token;
-                }
-            }
-            // while (!printFile.eof()) {
-
-            //     // getline(printFile, line);
-            //     // printTokens.push_back(line);
-            //     // tempLine = strtok(printTokens, "|");
-
-            //     vector<string> out;
-                
-            //     stringstream ss(line);
-            
-            //     //string s;
-            //     while (getline(ss, line, delim)) {
-            //         out.push_back(line);
-            //     }
-
-            //     for (auto &line: out) {
-            //         cout << line << endl;
-            //     }
-
-            //     // getline(printFile, tempVar);
-            //     // if (tempVar.find(data) == string::npos) {
-            //     //     cout << tempVar << endl;
-            //     // }
-
-            // }
-        }
-        printFile.close();
-        return true;
-    } else {
-        return false;
+    for (int i = 0; i < 1; i++) {
+        getline(tableInUse, firstLine);
     }
 
-    // if (printFile.is_open()) {
-    //     while (!printFile.eof()) {
-    //         getline(printFile, tempVar);
-    //         if (tempVar.find(data) == string::npos) {
-    //             cout << tempVar << endl;
-    //         }
-    //     }
-    //     printFile.close();
-    //     return true;
-    // }
-    // printFile.close();
-    // return false;
+    if (firstLine.find(dataName) != string::npos) {
+
+        istringstream firstStream(firstLine);
+        while (firstStream) {
+            string tempWord1;
+            firstStream >> tempWord1;
+            if (tempWord1.find(dataName) != string::npos) {
+                dataNamePosition = dataNameCounter;
+            } else if (tempWord1 == "|") {
+                dataNameCounter++;
+            }
+        }
+        dataNameCounter += dataNameCounter;
+
+        istringstream secondStream(firstLine);
+        int barCount = 0;
+        int index[200];
+        while (secondStream) {
+            string tempWord2;
+            secondStream >> tempWord2;
+            if (tempWord2 == "|") {
+                barCount++;
+                continue;
+            }
+            for (int i = 0; i < dataCounter; i++) {
+                if (tempWord2 == dataArray[i]) {
+                    index[indexCounter] = barCount;
+                    indexCounter++;
+                }
+            }
+        }
+
+        istringstream fourthStream(firstLine);
+        string tempWord4;
+        string newFirstLine;
+        while (fourthStream) {
+            if (tempWord4 == dataName) {
+                fourthStream >> tempWord4;
+                while (tempWord4 != "|") {
+                    fourthStream >> tempWord4;
+                }
+                fourthStream >> tempWord4;
+            }
+            newFirstLine = newFirstLine + " " + tempWord4;
+            fourthStream >> tempWord4;
+        }
+
+        cout << newFirstLine << endl;
+
+        while (getline(tableInUse, line)) {
+            if (line.find(data) == string::npos) {
+                int columnCounter = 0;
+                istringstream thirdStream(line);
+                while (thirdStream) {
+                    string tempWord3;
+                    thirdStream >> tempWord3;
+                    if (tempWord3 == "|") {
+                        columnCounter++;
+                        continue;
+                    }
+                    for (int j = 0; j < (indexCounter); j++) {
+                        if (columnCounter == index[j]) {
+                            cout << tempWord3 << " | ";
+                        } else if ((columnCounter - 1) == index[j]){
+                            cout << tempWord3;
+                            break;
+                        }
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+        tableInUse.close();
+
+    } else {
+        cout << "-- Error modifying records." << endl;
+        tableInUse.close();
+        return false;
+    }
+    
+    tableInUse.close();
+    return true;
+
+}
+
+void update(char* useLoopTokens, string useDBName) {
+
+    // update "tbName" set "tbProperty" = "new value" where "tbProperty" = "old value"
+
+    useLoopTokens = strtok(NULL, " ");
+    char* charTBName = useLoopTokens;
+    string tbName = charTBName;
+
+    string totalPath = dbName + "/" + tbName + ".txt";
+
+    bool exists = tableExists(totalPath);
+    if (exists) {
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charSetToken = useLoopTokens;
+        string setToken = charSetToken;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charDataNameToBeSet = useLoopTokens;
+        string dataNameToBeSet = charDataNameToBeSet;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charFirstOperand = useLoopTokens;
+        string firstOperand = charFirstOperand;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charDataToBeSet = useLoopTokens;
+        string dataToBeSet = charDataToBeSet;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charWhere = useLoopTokens;
+        string whereToken = charWhere;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charDataNameBeingSet = useLoopTokens;
+        string dataNameBeingSet = charDataNameBeingSet;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charSecondOperand = useLoopTokens;
+        string secondOperand = charSecondOperand;
+
+        useLoopTokens = strtok(NULL, " ");
+        char* charDataToBeChanged = useLoopTokens;
+        string dataToBeChanged = charDataToBeChanged;
+
+    } else {
+        cout << "-- !Failed to update table " << tbName << " because it does not exist." << endl;
+    }
 
 }
 
