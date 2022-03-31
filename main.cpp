@@ -797,7 +797,7 @@ void update(char* useLoopTokens, string useDBName) {
             cout << "dataNameFinding: " << dataNameFinding << endl;
             cout << "dataNameToBeChanged: " << dataNameToBeChanged << endl;
 
-            //update Product set price = 14.99 where name = 'Gizmo';
+            // update Product set price = 14.99 where name = 'Gizmo';
 
             while (firstStream) {
                 string tempWord1;
@@ -812,28 +812,32 @@ void update(char* useLoopTokens, string useDBName) {
                         secondStream >> tempWord2;
                         if (tempWord2.find(dataNameFinding) != string::npos) {
                             dataNameFindingPosition = dataNameFindingCounter;
+                            cout << "found data name to be found at pos: " << dataNameFindingPosition << endl;
                         } else if (tempWord2.find(dataNameToBeChanged) != string::npos) {
                             dataNameToBeChangedPosition = dataNameToBeChangedCounter;
+                            cout << "found data name to be changed at pos: " << dataNameToBeChangedPosition << endl;
                         } else if (tempWord2 == "|") {
                             dataNameFindingCounter++;
                             dataNameToBeChangedCounter++;
                         }
 
                     }
-                    // I think that the counter is wrong, the to be changed counter is
-                    // matching the finding data name counter and they should be different
-                    // if they're not the same column
+
                 }
-                // else if (tempWord1 == "|") {
-                //     dataNameToBeChangedCounter++;
-                    
-                // }
+
             }
 
-            cout << "data name to be set position: " << dataNameToBeChangedCounter << endl;
-            cout << "data name being set position: " << dataNameFindingCounter << endl;
+            if (dataNameFinding == dataNameToBeChanged) {
+                dataNameToBeChangedPosition = dataNameFindingPosition;
+            }
+
+            dataNameFindingPosition += dataNameFindingPosition;
+            dataNameToBeChangedPosition += dataNameToBeChangedPosition;
 
             tempFile << firstLine;
+
+            // update Product set price = 14.99 where name = 'Gizmo';
+            // update Product set name = 'Gizmo' where name = 'SuperGizmo';
 
             while (getline(tableInUse, line)) {
                 tempFile << endl;
@@ -843,31 +847,52 @@ void update(char* useLoopTokens, string useDBName) {
                 while (thirdStream && keepGoing) {
                     string tempWord3;
 
-                    for (int j = 0; j < (dataNameFindingCounter - 1); j++) {
+                    // cout << endl <<  "word we're searching for: " << dataToBeChanged << " at position: " << dataNameFindingPosition << endl;
+                    // cout << "word we're replacing search word for: " << dataToBeSet << " at position: " << dataNameToBeChangedPosition << endl;
+
+                    for (int j = 0; j < (dataNameFindingPosition + 1); j++) {
                         thirdStream >> tempWord3;
-                        cout << "tempword3 in the for loop: " << tempWord3 << endl;
-                        cout << "word we're searching for: " << dataToBeChanged << endl;
-                        cout << "word we're replacing search word for: " << dataToBeSet << endl << endl;
                     }
+                    cout << endl << "final tempWord3 after the loop: " << tempWord3 << endl;
                     if (tempWord3 == dataToBeChanged) {
+
                         cout << "line that we're editing: " << line << endl;
                         istringstream fourthStream(line);
                         string tempWord4;
-                        while (fourthStream) {
-                            for (int k = 0; k < (dataNameToBeChangedCounter - 1); k++) {
-                                fourthStream >> tempWord4;
-                            }
-                            cout << "tempWord4 after the loop: " << tempWord4 << endl;
-                            if (tempWord4 == dataToBeChanged) {
-                                cout << "tempWord4 matches the data name to be set: " << tempWord4 << " = " << dataNameToBeChanged << endl;
-                                tempFile << dataToBeSet << " ";
-                                counter++;
-                            }
+
+                        istringstream fifthStream(line);
+                        string tempWord5;
+
+                        for (int l = 0; l < (dataNameToBeChangedPosition); l++) {
+                            fourthStream >> tempWord4;
+                            tempFile << tempWord4 + " ";
                         }
+
+                        while (fifthStream) {
+                            for (int k = 0; k < (dataNameToBeChangedPosition + 1); k++) {
+                                fifthStream >> tempWord5;
+                            }
+                            cout << "final tempWord5 after the loop: " << tempWord5 << endl;
+                            cout << "data to be inserted: " << dataToBeSet << endl;
+                            cout << "tempWord5 will replace the data name to be set: " << dataToBeSet << " -> " << tempWord5 << endl;
+                            tempFile << dataToBeSet << " ";
+                            counter++;
+                            fifthStream >> tempWord5;
+                            while(fifthStream) {
+                                //fifthStream >> tempWord5;
+                                tempFile << tempWord5 + " ";
+                                cout << "appended " << tempWord5 << " to the end of line being changed" << endl;
+                                fifthStream >> tempWord5;
+                            }
+                            break;
+                        }
+                        break;
                         
                     } else {
-                        tempFile << tempWord3 << " ";
+                        tempFile << line;
+                        cout << "line that does not contain tempWord3: " << line << endl;
                     }
+                    break;
                 }
             }
         }
@@ -877,9 +902,9 @@ void update(char* useLoopTokens, string useDBName) {
             remove(totalPath.c_str());
             rename(tempPath.c_str(), totalPath.c_str());
             if (counter == 1) {
-                cout << "-- " << counter << " record updated" << endl;
+                cout << "-- " << counter << " record modified" << endl;
             } else {
-                cout << "-- " << counter << " records updated" << endl;
+                cout << "-- " << counter << " records modified" << endl;
             }
 
     } else {
