@@ -71,19 +71,22 @@ bool tokenize(char userInput[200]) {
 
     if (token1 == "USE") {
 
+        // get next token in userInput[]
         tokens = strtok(NULL, " ");
         char* temp = tokens;
         string useDBName = temp;
 
+        // remove ';' at the end of database name
         size_t pos;
         while ((pos = useDBName.find(";")) != string::npos) {
             useDBName.replace(pos, 1, "");
         }
 
         bool exists = databaseExists(useDBName);
-
         if(exists) {
             cout << "-- Using database " << useDBName << "." << endl;
+
+            // enter nowUsing loop (able to access greater range of commands)
             nowUsing(useDBName);
             return true;
         } else {
@@ -92,6 +95,7 @@ bool tokenize(char userInput[200]) {
         return false;
 
     } else {
+        // continue in notUsing loop (limited range of commands)
         bool notUsingLoop = notUsing(tokens);
         return notUsingLoop;
     }
@@ -119,15 +123,19 @@ void nowUsing(string useDBName) {
         char* charToken1 = useLoopTokens;
         string token1 = charToken1;
 
+        // remove ';' from token1;
         size_t pos;
         while ((pos = token1.find(";")) != string::npos) {
             token1.replace(pos, 1, "");
         }
 
+        // below is the range of commands allowed while in the nowUsing loop
         if (token1 == "USE") {
 
             useLoopTokens = strtok(NULL, " ");
             string useDBName = useLoopTokens;
+
+            // remove ';' from database name
             while ((pos = useDBName.find(";")) != string::npos) {
                 useDBName.replace(pos, 1, "");
             }
@@ -136,6 +144,7 @@ void nowUsing(string useDBName) {
 
             if(exists) {
                 cout << "-- Using database " << useDBName << endl;
+                // continue using the nowUsing loop
                 nowUsing(useDBName);
             } else {
                 cout << "-- !Failed to use database " << useDBName << " because it does not exist." << endl;
@@ -177,47 +186,59 @@ void nowUsing(string useDBName) {
 */
 void createTB(char* useLoopTokens, string dbName) {
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* tableToken = useLoopTokens;
     string tbCheck = tableToken;
 
     if (tbCheck == "TABLE") {
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charTBName = useLoopTokens;
         string tbName = charTBName;
 
+        // remove ';' from table name
         size_t pos;
         while ((pos = tbName.find(";")) != string::npos) {
             tbName.replace(pos, 1, "");
         }
 
+        // create the total path to the table in the database in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
         string restOfTokens;
         char* tempVar;
 
+        // while there are still tokens in useLoopTokens,
+        // get the rest of tokens and store them as a string to variable restOfTokens
         while ((useLoopTokens = strtok(NULL, " ")) != NULL) {
             tempVar = useLoopTokens;
             restOfTokens = restOfTokens + " " + tempVar;
         }
 
         if (!restOfTokens.empty()) {
+            // format the restOfTokens string
             string original = ",";
             string replacement = " |";
             while ((pos = restOfTokens.find(original)) != string::npos) {
                 restOfTokens.replace(pos, 1, replacement);
             }
+            // remove ';' from the restOfTokens string
             while ((pos = restOfTokens.find(";")) != string::npos) {
                 restOfTokens.replace(pos, 1, "");
             }
+            // remove the first two characters in rest of tokens (opening parentheses and space)
             restOfTokens.erase(0,2);
+            // remove the last character in restOfTokens (closing parentheses)
             restOfTokens.erase(prev(restOfTokens.end()));
 
         }
         
         bool exists = tableExists(totalPath);
  
+        // if table does not already exist
         if (!exists) {
+            // create table with totalPath as the path, pass restOfTokens into it, and close the table
             ofstream newTB(totalPath.c_str());
             newTB << restOfTokens;
             newTB.close();
@@ -242,24 +263,29 @@ void createTB(char* useLoopTokens, string dbName) {
 */
 void dropTB(char* useLoopTokens, string useDBName) {
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* tableToken = useLoopTokens;
     string tbCheck = tableToken;
 
     if (tbCheck == "TABLE") {
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charTBName = useLoopTokens;
         string tbName = charTBName;
 
+        // remove ';' from table name
         size_t pos;
         while ((pos = tbName.find(";")) != string::npos) {
             tbName.replace(pos, 1, "");
         }
 
+        // create total path to table within database in use
         string totalPath = useDBName + "/" + tbName + ".txt";
         
         bool exists = tableExists(totalPath);
 
+        // if a table exists with that path, delete the table
         if (exists) {
             if (remove(totalPath.c_str()) == 0) {
                 cout << "-- Table " << tbName << " deleted." << endl;
@@ -288,9 +314,11 @@ void dropTB(char* useLoopTokens, string useDBName) {
 */
 bool notUsing(char* tokens) {
 
+    // get next token in tokens
     char* token1 = tokens;
     string functionName = token1;
 
+    // below is the range of commands allowed while in the notUsing loop
     if (functionName == "CREATE") {
         create(tokens);
     } else if (functionName == "DROP") {
@@ -302,6 +330,7 @@ bool notUsing(char* tokens) {
         cout << "-- Invalid Input." << endl;
     }
 
+    // continue in loop
     return false;
 
 }
@@ -317,21 +346,28 @@ bool notUsing(char* tokens) {
 */
 void create(char* tokens) {
 
+    // establish first token as the createToken
     char* createToken = tokens;
 
+    // get next token in tokens
     tokens = strtok(NULL, " ");
     char* token2 = tokens;
     string strToken2 = token2;
 
+    // because in the notUsing loop, only option to create is database
     if (strToken2 == "DATABASE") {
+        // get next token in tokens
         tokens = strtok(NULL, " ");
         char* charDBName = tokens;
+
+        // remove the last character of charDBName -> ';'
         charDBName[strlen(charDBName)-1] = '\0';
         string dbName = charDBName;
 
         bool exists = databaseExists(dbName);
 
         if (!exists) {
+            // make the database
             mkdir(charDBName,0777);
             cout << "-- Database " << dbName << " created." << endl;
         } else {
@@ -358,7 +394,6 @@ void create(char* tokens) {
 bool databaseExists(const string &s) {
     struct stat buffer;
     return(stat(s.c_str(), &buffer) == 0);
-
 }
 
 /**
@@ -382,7 +417,6 @@ bool tableExists(string totalPath) {
     } else {
         return false;
     }
-
 }
 
 /**
@@ -395,20 +429,27 @@ bool tableExists(string totalPath) {
 */
 void drop(char* tokens) {
 
+    // establish first token as drop
     char* token1 = tokens;
 
+    // get next token in tokens
     tokens = strtok(NULL, " ");
     char* token2 = tokens;
     string strToken2 = token2;
 
+    // because in the notUsing loop, only option to create is database
     if (strToken2 == "DATABASE") {
         tokens = strtok(NULL, " ");
         char* charDBName = tokens;
+
+        // remove the last character of charDBName -> ';'
         charDBName[strlen(charDBName)-1] = '\0';
         string dbName = charDBName;
 
         bool exists = databaseExists(dbName);
+        // if database with that name exists
         if (exists) {
+            // delete database
             rmdir(charDBName);
             cout << "-- Database " << dbName << " deleted." << endl;
         } else {
@@ -435,37 +476,47 @@ void drop(char* tokens) {
 */
 void alter(char* useLoopTokens, string dbName) {
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* tableToken = useLoopTokens;
     string tbCheck = tableToken;
 
+    // only table able to be altered currently
     if (tbCheck == "TABLE") {
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charTBName = useLoopTokens;
         string tbName = charTBName;
 
+        // create the total path to the table in the database in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* howToAlter = useLoopTokens;
         string strHowToAlter = howToAlter;
 
+        // add is the only functionality currently
         if (strHowToAlter == "ADD") {
 
             string restOfTokens;
             char* tempVar;
 
+            // while there are still tokens in useLoopTokens,
+            // get the rest of tokens and store them as a string to variable restOfTokens            
             while ((useLoopTokens = strtok(NULL, " ")) != NULL) {
                 tempVar = useLoopTokens;
                 restOfTokens = restOfTokens + " " + tempVar;
             }
 
+            // remove ';' from the restOfTokens string
             size_t pos;
             while ((pos = restOfTokens.find(";")) != string::npos) {
                 restOfTokens.replace(pos, 1, "");
             }
 
             if (!restOfTokens.empty()) {
+                // format the restOfTokens string
                 string original = ",";
                 string replacement = " |";
                 size_t pos;
@@ -477,6 +528,7 @@ void alter(char* useLoopTokens, string dbName) {
             bool exists = tableExists(totalPath);
     
             if (exists) {
+                // create table with totalPath as the path, pass restOfTokens into it, and close the table
                 fstream modifyTB;
                 modifyTB.open(totalPath.c_str(), fstream::app);
                 modifyTB << " |" << restOfTokens;
@@ -496,7 +548,7 @@ void alter(char* useLoopTokens, string dbName) {
 /**
     Select tables.
 
-    This function selects tables withing the database in use if given
+    This function selects tables within the database in use if given
     the table name, and information on how much to be selected.
     If the table exists within the database in use, it then selects the
     amount by processing the next tokens and displays the information to
@@ -507,35 +559,50 @@ void alter(char* useLoopTokens, string dbName) {
 */
 void select(char* useLoopTokens, string dbName) {
 
+
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* selectToken = useLoopTokens;
     string selectCheck = selectToken;
 
+    // if selecting everything to display to screen
     if (selectCheck == "*") {
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* fromToken = useLoopTokens;
         string strFromToken = fromToken;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* tbNameToken = useLoopTokens;
         string tbName = tbNameToken;
-        
+
+        // remove ';' from the table name string
         size_t pos;
         while ((pos = tbName.find(";")) != string::npos) {
             tbName.replace(pos, 1, "");
         }
 
+        // create total path to table from table in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
         bool exists;
         exists = tableExists(totalPath);
 
+        // if table exists in database in use
         if (exists) {
+            // open file with totalPath
             string tempVar;
             ifstream printFile (totalPath.c_str());
             if (printFile.is_open()) {
+                // while file is not empty, print each line
                 while (!printFile.eof()) {
                     getline(printFile, tempVar);
+                    size_t pos2;
+                    // remove the " ' " from the temp variables (formatting)
+                    while ((pos2 = tempVar.find("'")) != string::npos) {
+                        tempVar.replace(pos2, 1, "");
+                    }
                     cout << tempVar << endl;
                 }
             }
@@ -543,54 +610,70 @@ void select(char* useLoopTokens, string dbName) {
         } else {
             cout << "-- !Failed to query table " << tbName << " because it does not exist." << endl;
         }
-    } else {
+
+    } else {   // selecting specific values to display to screen
 
         int dataCounter = 0;
         string dataArray[200];
         size_t found;
 
+        // reference the last character of string and check if equal to ','
         while (selectCheck.back() == ',') {
+            // remove the ',' characters
             while ((found = selectCheck.find(",")) != string::npos) {
                 selectCheck.replace(found, 1, "");
             }
+            // store selectCheck as element in dataArray
             dataArray[dataCounter] = selectCheck;
+
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             selectToken = useLoopTokens;
             selectCheck = selectToken;
+
             dataCounter++;
         }
-        
+        // store selectCheck in dataArray
         dataArray[dataCounter] = selectCheck;
         dataCounter++;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* fromToken = useLoopTokens;
         string strFromToken = fromToken;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* tbToken = useLoopTokens;
         string tbName = tbToken;
 
+        // create total path to table name with database name in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* whereToken = useLoopTokens;
         string strWhereToken = whereToken;
 
+        // only command available currently
         if (strWhereToken == "where") {
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* dataNameToken = useLoopTokens;
             string dataName = dataNameToken;
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* operandToken = useLoopTokens;
             string operand = operandToken;
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* dataToken = useLoopTokens;
             string data = dataToken;
 
+            // remove ';' from data variable
             size_t pos;
             while ((pos = data.find(";")) != string::npos) {
                 data.replace(pos, 1, "");
@@ -598,6 +681,7 @@ void select(char* useLoopTokens, string dbName) {
 
             bool exists = tableExists(totalPath);
 
+            // if table exists at path totalPath
             if (exists) {
 
                 bool success;
@@ -619,6 +703,24 @@ void select(char* useLoopTokens, string dbName) {
 
 }
 
+/**
+    Select specific columns from tables.
+
+    This function selects tables withing the database in use if given
+    the table name, and information on how much to be selected. It processes
+    the data given and decides what data to print, and what data to ignore.
+    It then displays this to the screen.
+
+    @param dataArray which is an array with the columns to be printed.
+    @param dataCounter which is the amount of columns in the array.
+    @param dbName which is the database in use name.
+    @param totalPath which is the total path to the table.
+    @param dataName which is the data name which is being evaluated.
+    @param operand which is the operand of the evaluation.
+    @param data which is the data being used to evaluate.
+
+    @return boolean value T/F if it was successful or not.
+*/
 bool printSelect(string dataArray[200], int dataCounter, string dbName, string totalPath, string dataName, string operand, string data) {
 
     int dataNamePosition;
@@ -628,37 +730,53 @@ bool printSelect(string dataArray[200], int dataCounter, string dbName, string t
     string tempToken;
     string line;
 
+    // open file at path totalPath
     ifstream tableInUse;
     tableInUse.open(totalPath);
 
+    // get first line of table
     for (int i = 0; i < 1; i++) {
         getline(tableInUse, firstLine);
     }
 
+    // check if the data names that want to be selected exist in table header
     if (firstLine.find(dataName) != string::npos) {
 
+        // create string stream and pass the firstline into it
         istringstream firstStream(firstLine);
+
+        // while the stream still has words to process, keep looping
         while (firstStream) {
             string tempWord1;
             firstStream >> tempWord1;
+            // if the word being processed is equal to the data name being found, store position as variable
             if (tempWord1.find(dataName) != string::npos) {
                 dataNamePosition = dataNameCounter;
             } else if (tempWord1 == "|") {
+                // else, keep enumerating the counter and looping
                 dataNameCounter++;
             }
         }
+        // taking the bars '|' into consideration, double the counter
         dataNameCounter += dataNameCounter;
 
+        // create a second string stream and pass the first line into it
         istringstream secondStream(firstLine);
         int barCount = 0;
         int index[200];
+
+        // while there are still words to process in stream
         while (secondStream) {
             string tempWord2;
             secondStream >> tempWord2;
+
+            // count how many bars (i.e. how many columns in header)
             if (tempWord2 == "|") {
                 barCount++;
                 continue;
             }
+
+            // finding the index of columns selected
             for (int i = 0; i < dataCounter; i++) {
                 if (tempWord2 == dataArray[i]) {
                     index[indexCounter] = barCount;
@@ -667,34 +785,63 @@ bool printSelect(string dataArray[200], int dataCounter, string dbName, string t
             }
         }
 
+        // create another string stream and pass the first line into it
         istringstream fourthStream(firstLine);
         string tempWord4;
         string newFirstLine;
+
+        // while there are still words to process in stream
         while (fourthStream) {
+
+            // if the temporary variable is equal to the data name being looked for
             if (tempWord4 == dataName) {
+
+                // get the next word in the stream and process it
                 fourthStream >> tempWord4;
                 while (tempWord4 != "|") {
                     fourthStream >> tempWord4;
                 }
                 fourthStream >> tempWord4;
             }
+            // format the newFirstLine
             newFirstLine = newFirstLine + " " + tempWord4;
+
+            // get the next word in the stream
             fourthStream >> tempWord4;
         }
 
+        // format the new first line by removing the first two characters (two empty spaces)
+        newFirstLine.erase(0,2);
         cout << newFirstLine << endl;
 
+        // process the rest of the lines in the table, line by line
         while (getline(tableInUse, line)) {
+            
+            // if the line does not contain the data being searched for
             if (line.find(data) == string::npos) {
                 int columnCounter = 0;
+
+                // create another string stream and pass the line into it
                 istringstream thirdStream(line);
+
+                // while there are words to process in the stream
                 while (thirdStream) {
                     string tempWord3;
                     thirdStream >> tempWord3;
+
+                    // format the temporary variable by removing " ' "
+                    size_t pos3;
+                    while ((pos3 = tempWord3.find("'")) != string::npos) {
+                        tempWord3.replace(pos3, 1, "");
+                    }
+
+                    // used to keep track of which column is being selected
                     if (tempWord3 == "|") {
                         columnCounter++;
                         continue;
                     }
+
+                    // print out the selected rows and columns given the data above
                     for (int j = 0; j < (indexCounter); j++) {
                         if (columnCounter == index[j]) {
                             cout << tempWord3 << " | ";
@@ -721,6 +868,18 @@ bool printSelect(string dataArray[200], int dataCounter, string dbName, string t
 
 }
 
+/**
+    Update tables.
+
+    This function updates tables within the database in use if the table
+    exists within the database in use. This is successful if given the table 
+    name, information on what parameter will be updated, and information on 
+    what parameter will be checked in order for the previous parameter to 
+    be updated.
+
+    @param useLoopTokens which is the user inputted command.
+    @param useDBName which is the database name in use.
+*/
 void update(char* useLoopTokens, string useDBName) {
 
     int dataNameToBeChangedPosition;
@@ -733,90 +892,115 @@ void update(char* useLoopTokens, string useDBName) {
     string tempToken;
     string line;
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* charTBName = useLoopTokens;
     string tbName = charTBName;
 
+    // create the total path to table given database in use
     string totalPath = useDBName + "/" + tbName + ".txt";
 
     bool exists = tableExists(totalPath);
+
+    // if table already exists
     if (exists) {
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charSetToken = useLoopTokens;
         string setToken = charSetToken;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charDataNameToBeChanged = useLoopTokens;
         string dataNameToBeChanged = charDataNameToBeChanged;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charFirstOperand = useLoopTokens;
         string firstOperand = charFirstOperand;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charDataToBeSet = useLoopTokens;
         string dataToBeSet = charDataToBeSet;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charWhere = useLoopTokens;
         string whereToken = charWhere;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charDataNameFinding = useLoopTokens;
         string dataNameFinding = charDataNameFinding;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charSecondOperand = useLoopTokens;
         string secondOperand = charSecondOperand;
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charDataToBeChanged = useLoopTokens;
         string dataToBeChanged = charDataToBeChanged;
 
+        // format the dataToBeChanged by removing the ';' from the end
         size_t pos;
         while ((pos = dataToBeChanged.find(";")) != string::npos) {
             dataToBeChanged.replace(pos, 1, "");
         }
 
+        // open file at path totalPath
         ifstream tableInUse;
         tableInUse.open(totalPath);
 
+        // create and open a temporary file in the same database to write to
         string tempPath = useDBName + "/Writing.txt";
         ofstream tempFile;
         tempFile.open(tempPath);
 
+        // get the first line of table in use
         for (int i = 0; i < 1; i++) {
             getline(tableInUse, firstLine);
         }
 
+        // if the first line includes the data name that has the data that will be inserted 
+        // and the data name that has the data that will be changed
         if (firstLine.find(dataNameToBeChanged) != string::npos && firstLine.find(dataNameFinding) != string::npos) {
 
+            // create a string stream and pass the first line of the table in use to it
             istringstream firstStream(firstLine);
 
-            cout << "dataNameFinding: " << dataNameFinding << endl;
-            cout << "dataNameToBeChanged: " << dataNameToBeChanged << endl;
-
-            // update Product set price = 14.99 where name = 'Gizmo';
-
+            // while there are words in the stream to be processed
             while (firstStream) {
                 string tempWord1;
                 firstStream >> tempWord1;
 
+                // if temporary variable contains the data name that will be changed
                 if (tempWord1.find(dataNameToBeChanged) != string::npos) {
+
+                    // store the position
                     dataNameToBeChangedPosition = dataNameToBeChangedCounter;
+
+                    // create a second string stream and pass the first line into it
                     istringstream secondStream(firstLine);
 
+                    // while there are words in the stream to be processed
                     while (secondStream) {
                         string tempWord2;
                         secondStream >> tempWord2;
+
+                        // if the temporary variable contains the data name to be set
                         if (tempWord2.find(dataNameFinding) != string::npos) {
+                            // store the position
                             dataNameFindingPosition = dataNameFindingCounter;
-                            cout << "found data name to be found at pos: " << dataNameFindingPosition << endl;
-                        } else if (tempWord2.find(dataNameToBeChanged) != string::npos) {
+
+                        } else if (tempWord2.find(dataNameToBeChanged) != string::npos) { // if the temporary variable contains the data name to be changed
+                            // store the position
                             dataNameToBeChangedPosition = dataNameToBeChangedCounter;
-                            cout << "found data name to be changed at pos: " << dataNameToBeChangedPosition << endl;
-                        } else if (tempWord2 == "|") {
+
+                        } else if (tempWord2 == "|") { // if neither of the options above, enumerate the counters
                             dataNameFindingCounter++;
                             dataNameToBeChangedCounter++;
                         }
@@ -827,61 +1011,71 @@ void update(char* useLoopTokens, string useDBName) {
 
             }
 
+            // if the data name to be set is the same as the data name to be changed, their positions are equal
             if (dataNameFinding == dataNameToBeChanged) {
                 dataNameToBeChangedPosition = dataNameFindingPosition;
             }
 
+            // to account for the bars '|', double the positions
             dataNameFindingPosition += dataNameFindingPosition;
             dataNameToBeChangedPosition += dataNameToBeChangedPosition;
 
+            // insert the first line of the table in use to the temporary writing file
             tempFile << firstLine;
 
-            // update Product set price = 14.99 where name = 'Gizmo';
-            // update Product set name = 'Gizmo' where name = 'SuperGizmo';
-
+            // while there are still lines to process in the table in use
             while (getline(tableInUse, line)) {
                 tempFile << endl;
+
+                // create string string and pass the line being processed into it
                 istringstream thirdStream(line);
                 bool keepGoing = true;
 
+                // while the stream has words to process and keepGoing == true, loop
                 while (thirdStream && keepGoing) {
                     string tempWord3;
 
-                    // cout << endl <<  "word we're searching for: " << dataToBeChanged << " at position: " << dataNameFindingPosition << endl;
-                    // cout << "word we're replacing search word for: " << dataToBeSet << " at position: " << dataNameToBeChangedPosition << endl;
-
+                    // store the data at the dataNameFindingPosition to a temporary variable
                     for (int j = 0; j < (dataNameFindingPosition + 1); j++) {
                         thirdStream >> tempWord3;
                     }
-                    cout << endl << "final tempWord3 after the loop: " << tempWord3 << endl;
+
+                    // if the data in the temporary variable is equal to the data to be changed
                     if (tempWord3 == dataToBeChanged) {
 
-                        cout << "line that we're editing: " << line << endl;
+                        // create another string stream and pass the line being processed into it
                         istringstream fourthStream(line);
                         string tempWord4;
 
+                        // create another string stream and pass the line being processed into it
                         istringstream fifthStream(line);
                         string tempWord5;
 
+                        // pass the data from before the index of the dataNameToBeChanged to the temporary file and format
                         for (int l = 0; l < (dataNameToBeChangedPosition); l++) {
                             fourthStream >> tempWord4;
                             tempFile << tempWord4 + " ";
                         }
 
+                        // while there are still words to be processed in the stream
                         while (fifthStream) {
+                            // parse to the position of the data that is being changed
                             for (int k = 0; k < (dataNameToBeChangedPosition + 1); k++) {
                                 fifthStream >> tempWord5;
                             }
-                            cout << "final tempWord5 after the loop: " << tempWord5 << endl;
-                            cout << "data to be inserted: " << dataToBeSet << endl;
-                            cout << "tempWord5 will replace the data name to be set: " << dataToBeSet << " -> " << tempWord5 << endl;
+                            // insert the new data that will be set in the location of the data being changed to the temporary file
                             tempFile << dataToBeSet << " ";
+                            
+                            // enumerate the counter to keep track of number of updates 
                             counter++;
+
+                            // get the data at the position after the position of the data to be changed
                             fifthStream >> tempWord5;
+
+                            // while there are still words to be processed in the stream after the change has been made,
+                            //  add them to the temporary file
                             while(fifthStream) {
-                                //fifthStream >> tempWord5;
                                 tempFile << tempWord5 + " ";
-                                cout << "appended " << tempWord5 << " to the end of line being changed" << endl;
                                 fifthStream >> tempWord5;
                             }
                             break;
@@ -890,23 +1084,21 @@ void update(char* useLoopTokens, string useDBName) {
                         
                     } else {
                         tempFile << line;
-                        cout << "line that does not contain tempWord3: " << line << endl;
                     }
                     break;
                 }
             }
         }
-
-            tableInUse.close();
-            tempFile.close();
-            remove(totalPath.c_str());
-            rename(tempPath.c_str(), totalPath.c_str());
-            if (counter == 1) {
-                cout << "-- " << counter << " record modified" << endl;
-            } else {
-                cout << "-- " << counter << " records modified" << endl;
-            }
-
+        // close both files, delete the original file, rename the path of the temporary file to the totalPath
+        tableInUse.close();
+        tempFile.close();
+        remove(totalPath.c_str());
+        rename(tempPath.c_str(), totalPath.c_str());
+        if (counter == 1) {
+            cout << "-- " << counter << " record modified" << endl;
+        } else {
+            cout << "-- " << counter << " records modified" << endl;
+        }
     } else {
         cout << "-- !Failed to update table " << tbName << " because it does not exist." << endl;
     }
@@ -914,47 +1106,70 @@ void update(char* useLoopTokens, string useDBName) {
 
 }
 
+/**
+    Insert high-level data into tables.
+
+    This function inserts high-level data into tables within the database
+    in use if the table exists within the database in use. Depending on
+    the success of the insertion, either a success or failure message is
+    displayed on the screen.
+
+    @param useLoopTokens which is the user inputted command.
+    @param dbName which is the database name in use.
+*/
 void insert(char* useLoopTokens, string dbName) {
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* charPointName = useLoopTokens;
     string pointToTB = charPointName;
 
+    // this is the only command available currently
     if (pointToTB == "into") {
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charTBName = useLoopTokens;
         string tbName = charTBName;
 
+        // create the total path to table with database in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, "(");
         char* howToAlter = useLoopTokens;
         string strHowToAlter = howToAlter;
 
+        // this is the only command available currently
         if (strHowToAlter == "values") {
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* charRestOfTokens = useLoopTokens;
             string restOfTokens = charRestOfTokens;
 
             char* tempVar;
 
+            // while there are still tokens in useLoopTokens,
+            // get the rest of tokens and store them as a string to variable restOfTokens
             while ((useLoopTokens = strtok(NULL, " ")) != NULL) {
                 tempVar = useLoopTokens;
                 restOfTokens = restOfTokens + " " + tempVar;
             }
 
+            // remove the ';' from the restOfTokens string
             size_t pos;
             while ((pos = restOfTokens.find(";")) != string::npos) {
                 restOfTokens.replace(pos, 1, "");
             }
 
+            // remove the parentheses from the restOfTokens string
             while ((pos = restOfTokens.find(")")) != string::npos) {
                 restOfTokens.replace(pos, 1, "");
             }
 
             if (!restOfTokens.empty()) {
+                // format the string for insertion
                 string original = ",";
                 string replacement = " |";
                 while ((pos = restOfTokens.find(original)) != string::npos) {
@@ -964,7 +1179,9 @@ void insert(char* useLoopTokens, string dbName) {
             
             bool exists = tableExists(totalPath);
     
+            // if the table exists
             if (exists) {
+                // open table at path totalPath and insert the formatted restOfTokens
                 fstream modifyTB;
                 modifyTB.open(totalPath.c_str(), fstream::app);
                 modifyTB << "\n" << restOfTokens;
@@ -980,57 +1197,77 @@ void insert(char* useLoopTokens, string dbName) {
     }
 }
 
+/**
+    Delete high-level data in tables.
+
+    This function deletes row(s) of high-level data in table within the 
+    database in use if the table exists within the database in use. 
+    Depending on the success of the deletion, either a success or failure 
+    message is displayed on the screen.
+
+    @param useLoopTokens which is the user inputted command.
+    @param dbName which is the database name in use.
+*/
 void deleteData(char* useLoopTokens, string dbName) {
 
+    // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* fromToken = useLoopTokens;
     string pointToTB = fromToken;
 
+    // only command available currently
     if (pointToTB == "from") {
+
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* charTBName = useLoopTokens;
         string tbName = charTBName;
 
+        // create the total path to the table from database in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
+        // get next token in useLoopTokens
         useLoopTokens = strtok(NULL, " ");
         char* whereToken = useLoopTokens;
         string pointToValue = whereToken;
 
+        // only command available currently
         if (pointToValue == "where") {
 
-            size_t pos;
-            while ((pos = tbName.find(";")) != string::npos) {
-                tbName.replace(pos, 1, "");
-            }
-
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* dataNameToken = useLoopTokens;
             string dataName = dataNameToken;
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* operatorToken = useLoopTokens;
             string operand = operatorToken;
 
+            // get next token in useLoopTokens
             useLoopTokens = strtok(NULL, " ");
             char* dataToken = useLoopTokens;
             string data = dataToken;
+
+            // find ';' in data and remove
+            size_t pos;
             while ((pos = data.find(";")) != string::npos) {
                 data.replace(pos, 1, "");
             }
 
             bool exists = tableExists(totalPath);
 
+            // if the table exists
             if (exists) {
 
                 bool success;
                 success = modifyTable(dbName, totalPath, dataName, operand, data);
 
                 if (!success) {
-                    cout << "-- Error modifying file, try again." << endl;
+                    cout << "-- Error deleting data in file, try again." << endl;
                 }
             } else {
-                cout << "-- !Failed to modify table " << tbName << " because it does not exist." << endl;
+                cout << "-- !Failed to delete data in table " << tbName << " because it does not exist." << endl;
 
             }
 
@@ -1042,6 +1279,24 @@ void deleteData(char* useLoopTokens, string dbName) {
 
 }
 
+/**
+    Modify high-level data in tables.
+
+    This function deletes row(s) of high-level data in table within the 
+    database in use if the table exists within the database in use. It
+    processes the data given and decides which rows to delete based on the
+    Depending on the success of the modification, either a success or failure 
+    message is displayed on the screen, along with a counter of how many
+    records have been deleted.
+
+    @param dbName which is the database in use name.
+    @param totalPath which is the total path to the table.
+    @param dataName which is the data name which is being evaluated.
+    @param operand which is the operand of the evaluation.
+    @param data which is the data being used to evaluate.
+
+    @return boolean value T/F if it was successful or not.
+*/
 bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data) {
     
     int dataNamePosition;
@@ -1051,56 +1306,78 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
     string tempToken;
     string line;
 
+    // open table in use at path totalPath
     ifstream tableInUse;
     tableInUse.open(totalPath);
 
+    // create and open temporary table to write to
     string tempPath = dbName + "/Writing.txt";
     ofstream tempFile;
     tempFile.open(tempPath);
 
+    // get the first line of the table in use
     for (int i = 0; i < 1; i++) {
         getline(tableInUse, firstLine);
     }
 
+    // convert the operand to a char and enter switch statement
     char charOperand = operand[0];
     switch(charOperand) {
         case '>':
+            // if the first line contains the data name
             if (firstLine.find(dataName) != string::npos) {
+
+                // create a string string and pass the first line into it
                 istringstream firstStream(firstLine);
 
+                // while there are words to process in string stream
                 while (firstStream) {
                     string tempWord1;
                     firstStream >> tempWord1;
+
+                    // loop thorugh while until the position of data name is found and stored
                     if (tempWord1.find(dataName) != string::npos) {
                         dataNamePosition = dataNameCounter;
                     } else if (tempWord1 == "|") {
                         dataNameCounter++;
                     }
                 }
-                dataNameCounter += dataNameCounter;
 
+                // to account for the bars '|', double the dataNamePosition
+                dataNamePosition += dataNamePosition;
+
+                // pass the first liine of the table in use into the temporary table
                 tempFile << firstLine;
                 float numData = stof(data);
 
+                // while there are still lines to process in table in use
                 while (getline(tableInUse, line)) {
 
+                    // create string stream and pass line to be processed
                     istringstream secondStream(line);
                     bool keepGoing = true;
 
+                    // while there are words to process in stream and keepGoing == true
                     while (secondStream && keepGoing) {
                         string tempWord2;
 
-                        for (int i = 0; i < dataNameCounter; i++) {
+                        // store data at position dataNamePosition to temporary variable
+                        for (int i = 0; i < dataNamePosition; i++) {
                             secondStream >> tempWord2;
                         }
 
+                        // if '.' is found (it is a float)
                         if (tempWord2.find('.') != string::npos ) {
 
                             float tempFloat = stof(tempWord2);
+
+                            // if the temporary variable is greater than the original data
                             if (tempFloat > numData) {
+                                // enumerate counter and exit loop
                                 counter++;
                                 keepGoing = false;
                             } else {
+                                // add line to temporary table
                                 tempFile << endl << line;
                             }
 
@@ -1109,14 +1386,15 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
                     }
                 }
 
+                // close both files, delete the original file, rename the path of the temporary file to the totalPath
                 tableInUse.close();
                 tempFile.close();
                 remove(totalPath.c_str());
                 rename(tempPath.c_str(), totalPath.c_str());
                 if (counter == 1) {
-                    cout << "-- " << counter << " record modified" << endl;
+                    cout << "-- " << counter << " record deleted" << endl;
                 } else {
-                    cout << "-- " << counter << " records modified" << endl;
+                    cout << "-- " << counter << " records deleted" << endl;
                 }
             } else {
                 cout << "-- Error modifying records." << endl;
@@ -1127,48 +1405,66 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
             }
             break;
         case '<':
+            // if the first line contains the data name
             if (firstLine.find(dataName) != string::npos) {
+
+                // create a string string and pass the first line into it
                 istringstream firstStream(firstLine);
 
+                // while there are words to process in string stream
                 while (firstStream) {
                     string tempWord1;
                     firstStream >> tempWord1;
+
+                    // loop thorugh while until the position of data name is found and stored
                     if (tempWord1.find(dataName) != string::npos) {
                         dataNamePosition = dataNameCounter;
                     } else if (tempWord1 == "|") {
                         dataNameCounter++;
                     }
                 }
+
+                // to account for the bars '|', double the dataNamePosition
                 dataNameCounter += dataNameCounter;
 
+                // pass the first liine of the table in use into the temporary table
                 tempFile << firstLine;
                 float numData = stof(data);
 
+                // while there are still lines to process in table in use
                 while (getline(tableInUse, line)) {
 
+                    // create string stream and pass line to be processed
                     istringstream secondStream(line);
                     bool keepGoing = true;
 
+                    // while there are words to process in stream and keepGoing == true
                     while (secondStream && keepGoing) {
                         string tempWord2;
 
+                        // store data at position dataNamePosition to temporary variable
                         for (int i = 0; i < dataNameCounter; i++) {
                             secondStream >> tempWord2;
                         }
 
+                        // if '.' is found (it is a float)
                         if (tempWord2.find('.') != string::npos ) {
 
                             float tempFloat = stof(tempWord2);
+
+                            // if the temporary variable is less than the original data
                             if (tempFloat < numData) {
+                                // enumerate counter and exit loop
                                 counter++;
                                 keepGoing = false;
                             } else {
+                                // add line to temporary table
                                 tempFile << endl << line;
                             }
                         }
                     }
                 }
-
+                // close both files, delete the original file, rename the path of the temporary file to the totalPath
                 tableInUse.close();
                 tempFile.close();
                 remove(totalPath.c_str());
@@ -1187,20 +1483,24 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
             }
             break;
         case '=':
+            // if the first line contains the data name
             if (firstLine.find(dataName) != string::npos) {
 
+                // pass the first line to the temporary file
                 tempFile << firstLine;
 
+                // while there are lines to process in table in use
                 while (getline(tableInUse, line)) {
-
+                    // if the line containes the data to be found, enumerate
                     if (line.find(data) != string::npos) {
                         counter++;
                     } else {
+                        // add line to temporary file
                         tempFile << endl << line;
                     }
 
                 }
-
+                // close both files, delete the original file, rename the path of the temporary file to the totalPath
                 tableInUse.close();
                 tempFile.close();
                 remove(totalPath.c_str());
@@ -1219,7 +1519,7 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
             }
             break;
     }
-
+    // close both files, delete the temporary file
     tableInUse.close();
     tempFile.close();
     remove(tempPath.c_str());
