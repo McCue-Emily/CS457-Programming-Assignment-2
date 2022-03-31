@@ -723,12 +723,11 @@ bool printSelect(string dataArray[200], int dataCounter, string dbName, string t
 
 void update(char* useLoopTokens, string useDBName) {
 
-    // update "tbName" set "tbProperty" = "new value" where "tbProperty" = "old value"
-
-    int dataNameToBeSetPosition;
-    int dataNameBeingSetPosition;
-    int dataNameToBeSetCounter = 0;
-    int dataNameBeingSet = 0;
+    int dataNameToBeChangedPosition;
+    int dataNameFindingPosition;
+    int dataNameFindingCounter = 0;
+    int dataNameToBeChangedCounter = 0;
+    int dataNameFinding = 0;
     int counter = 0;
     string firstLine;
     string tempToken;
@@ -738,7 +737,7 @@ void update(char* useLoopTokens, string useDBName) {
     char* charTBName = useLoopTokens;
     string tbName = charTBName;
 
-    string totalPath = dbName + "/" + tbName + ".txt";
+    string totalPath = useDBName + "/" + tbName + ".txt";
 
     bool exists = tableExists(totalPath);
     if (exists) {
@@ -748,8 +747,8 @@ void update(char* useLoopTokens, string useDBName) {
         string setToken = charSetToken;
 
         useLoopTokens = strtok(NULL, " ");
-        char* charDataNameToBeSet = useLoopTokens;
-        string dataNameToBeSet = charDataNameToBeSet;
+        char* charDataNameToBeChanged = useLoopTokens;
+        string dataNameToBeChanged = charDataNameToBeChanged;
 
         useLoopTokens = strtok(NULL, " ");
         char* charFirstOperand = useLoopTokens;
@@ -764,8 +763,8 @@ void update(char* useLoopTokens, string useDBName) {
         string whereToken = charWhere;
 
         useLoopTokens = strtok(NULL, " ");
-        char* charDataNameBeingSet = useLoopTokens;
-        string dataNameBeingSet = charDataNameBeingSet;
+        char* charDataNameFinding = useLoopTokens;
+        string dataNameFinding = charDataNameFinding;
 
         useLoopTokens = strtok(NULL, " ");
         char* charSecondOperand = useLoopTokens;
@@ -775,10 +774,15 @@ void update(char* useLoopTokens, string useDBName) {
         char* charDataToBeChanged = useLoopTokens;
         string dataToBeChanged = charDataToBeChanged;
 
+        size_t pos;
+        while ((pos = dataToBeChanged.find(";")) != string::npos) {
+            dataToBeChanged.replace(pos, 1, "");
+        }
+
         ifstream tableInUse;
         tableInUse.open(totalPath);
 
-        string tempPath = dbName + "/Writing.txt";
+        string tempPath = useDBName + "/Writing.txt";
         ofstream tempFile;
         tempFile.open(tempPath);
 
@@ -786,56 +790,102 @@ void update(char* useLoopTokens, string useDBName) {
             getline(tableInUse, firstLine);
         }
 
-        if (firstLine.find(dataNameToBeSet) != string::npos && firstLine.find(dataNameBeingSet) != string::npos) {
-            // find the positions of both data names in firstLine
+        if (firstLine.find(dataNameToBeChanged) != string::npos && firstLine.find(dataNameFinding) != string::npos) {
+
             istringstream firstStream(firstLine);
+
+            cout << "dataNameFinding: " << dataNameFinding << endl;
+            cout << "dataNameToBeChanged: " << dataNameToBeChanged << endl;
+
+            //update Product set price = 14.99 where name = 'Gizmo';
 
             while (firstStream) {
                 string tempWord1;
                 firstStream >> tempWord1;
-                if (tempWord1.find(dataNameToBeSet) != string::npos) {
-                    dataNameToBeSetPosition = dataNameToBeSetCounter;
+
+                if (tempWord1.find(dataNameToBeChanged) != string::npos) {
+                    dataNameToBeChangedPosition = dataNameToBeChangedCounter;
                     istringstream secondStream(firstLine);
+
                     while (secondStream) {
                         string tempWord2;
                         secondStream >> tempWord2;
-                        if (tempWord2.find(dataNameBeingSet) != string::npos) {
-                            dataNameBeingSetPosition = dataNameBeingSetCounter;
+                        if (tempWord2.find(dataNameFinding) != string::npos) {
+                            dataNameFindingPosition = dataNameFindingCounter;
+                        } else if (tempWord2.find(dataNameToBeChanged) != string::npos) {
+                            dataNameToBeChangedPosition = dataNameToBeChangedCounter;
                         } else if (tempWord2 == "|") {
-                            dataNameBeingSetCounter++;
+                            dataNameFindingCounter++;
+                            dataNameToBeChangedCounter++;
                         }
+
                     }
-                } else if (tempWord1 == "|") {
-                    dataNameToBeSetCounter++;
+                    // I think that the counter is wrong, the to be changed counter is
+                    // matching the finding data name counter and they should be different
+                    // if they're not the same column
                 }
+                // else if (tempWord1 == "|") {
+                //     dataNameToBeChangedCounter++;
+                    
+                // }
             }
-            dataNameToBeSetCounter += dataNameToBeSetCounter;
-            dataNameBeingSetCounter += dataNameBeingSetCounter;
+
+            cout << "data name to be set position: " << dataNameToBeChangedCounter << endl;
+            cout << "data name being set position: " << dataNameFindingCounter << endl;
 
             tempFile << firstLine;
 
             while (getline(tableInUse, line)) {
+                tempFile << endl;
                 istringstream thirdStream(line);
                 bool keepGoing = true;
 
                 while (thirdStream && keepGoing) {
                     string tempWord3;
 
-                    for (int j = 0; j < dataNameBeingSetCounter; j++) {
+                    for (int j = 0; j < (dataNameFindingCounter - 1); j++) {
                         thirdStream >> tempWord3;
+                        cout << "tempword3 in the for loop: " << tempWord3 << endl;
+                        cout << "word we're searching for: " << dataToBeChanged << endl;
+                        cout << "word we're replacing search word for: " << dataToBeSet << endl << endl;
                     }
-                    if (tempWord3 == dataNameBeingSet) {
+                    if (tempWord3 == dataToBeChanged) {
+                        cout << "line that we're editing: " << line << endl;
+                        istringstream fourthStream(line);
+                        string tempWord4;
+                        while (fourthStream) {
+                            for (int k = 0; k < (dataNameToBeChangedCounter - 1); k++) {
+                                fourthStream >> tempWord4;
+                            }
+                            cout << "tempWord4 after the loop: " << tempWord4 << endl;
+                            if (tempWord4 == dataToBeChanged) {
+                                cout << "tempWord4 matches the data name to be set: " << tempWord4 << " = " << dataNameToBeChanged << endl;
+                                tempFile << dataToBeSet << " ";
+                                counter++;
+                            }
+                        }
                         
-                        // it they're equal, replace the data name to be set data value with the 
-                        // data name being set data value and print
+                    } else {
+                        tempFile << tempWord3 << " ";
                     }
                 }
             }
         }
 
+            tableInUse.close();
+            tempFile.close();
+            remove(totalPath.c_str());
+            rename(tempPath.c_str(), totalPath.c_str());
+            if (counter == 1) {
+                cout << "-- " << counter << " record updated" << endl;
+            } else {
+                cout << "-- " << counter << " records updated" << endl;
+            }
+
     } else {
         cout << "-- !Failed to update table " << tbName << " because it does not exist." << endl;
     }
+
 
 }
 
