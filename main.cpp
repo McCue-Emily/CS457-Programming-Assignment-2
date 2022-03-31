@@ -38,6 +38,10 @@ void insert(char* useLoopTokens, string dbName);
 void deleteData(char* useLoopTokens, string dbName);
 bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data);
 
+// insert into "tbName" values(" ");
+// update "tbName" set "tbProperty" = "new value" where "tbProperty" = "old value"
+// select "tbProperty", "tbProperty" from "tbName" where "tbProperty" != "value"
+
 int main() {
 
     bool exit = false;
@@ -843,10 +847,12 @@ void deleteData(char* useLoopTokens, string dbName) {
 
 bool modifyTable(string dbName, string totalPath, string dataName, string operand, string data) {
     
-    /*
-    delete from Product where name = 'Gizmo';
-    delete from Product where price > 150;
-    */
+    int dataNamePosition;
+    int dataNameCounter = 0;
+    int counter = 0;
+    string firstLine;
+    string tempToken;
+    string line;
 
     ifstream tableInUse;
     tableInUse.open(totalPath);
@@ -855,13 +861,6 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
     ofstream tempFile;
     tempFile.open(tempPath);
 
-    string firstLine;
-    string line;
-    int counter = 0;
-    // stringstream ss;
-    // string tempToken;
-    // float found;
-
     for (int i = 0; i < 1; i++) {
         getline(tableInUse, firstLine);
     }
@@ -869,8 +868,126 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
     char charOperand = operand[0];
     switch(charOperand) {
         case '>':
+            if (firstLine.find(dataName) != string::npos) {
+                istringstream firstStream(firstLine);
+
+                while (firstStream) {
+                    string tempWord1;
+                    firstStream >> tempWord1;
+                    if (tempWord1.find(dataName) != string::npos) {
+                        dataNamePosition = dataNameCounter;
+                    } else if (tempWord1 == "|") {
+                        dataNameCounter++;
+                    }
+                }
+                dataNameCounter += dataNameCounter;
+
+                tempFile << firstLine;
+                float numData = stof(data);
+
+                while (getline(tableInUse, line)) {
+
+                    istringstream secondStream(line);
+                    bool keepGoing = true;
+
+                    while (secondStream && keepGoing) {
+                        string tempWord2;
+
+                        for (int i = 0; i < dataNameCounter; i++) {
+                            secondStream >> tempWord2;
+                        }
+
+                        if (tempWord2.find('.') != string::npos ) {
+
+                            float tempFloat = stof(tempWord2);
+                            if (tempFloat > numData) {
+                                counter++;
+                                keepGoing = false;
+                            } else {
+                                tempFile << endl << line;
+                            }
+
+                        }
+
+                    }
+                }
+
+                tableInUse.close();
+                tempFile.close();
+                remove(totalPath.c_str());
+                rename(tempPath.c_str(), totalPath.c_str());
+                if (counter == 1) {
+                    cout << "-- " << counter << " record modified" << endl;
+                } else {
+                    cout << "-- " << counter << " records modified" << endl;
+                }
+            } else {
+                cout << "-- Error modifying records." << endl;
+                tableInUse.close();
+                tempFile.close();
+                remove(tempPath.c_str());
+                return false;
+            }
             break;
         case '<':
+            if (firstLine.find(dataName) != string::npos) {
+                istringstream firstStream(firstLine);
+
+                while (firstStream) {
+                    string tempWord1;
+                    firstStream >> tempWord1;
+                    if (tempWord1.find(dataName) != string::npos) {
+                        dataNamePosition = dataNameCounter;
+                    } else if (tempWord1 == "|") {
+                        dataNameCounter++;
+                    }
+                }
+                dataNameCounter += dataNameCounter;
+
+                tempFile << firstLine;
+                float numData = stof(data);
+
+                while (getline(tableInUse, line)) {
+
+                    istringstream secondStream(line);
+                    bool keepGoing = true;
+
+                    while (secondStream && keepGoing) {
+                        string tempWord2;
+
+                        for (int i = 0; i < dataNameCounter; i++) {
+                            secondStream >> tempWord2;
+                        }
+
+                        if (tempWord2.find('.') != string::npos ) {
+
+                            float tempFloat = stof(tempWord2);
+                            if (tempFloat < numData) {
+                                counter++;
+                                keepGoing = false;
+                            } else {
+                                tempFile << endl << line;
+                            }
+                        }
+                    }
+                }
+
+                tableInUse.close();
+                tempFile.close();
+                remove(totalPath.c_str());
+                rename(tempPath.c_str(), totalPath.c_str());
+                if (counter == 1) {
+                    cout << "-- " << counter << " record modified" << endl;
+                } else {
+                    cout << "-- " << counter << " records modified" << endl;
+                }
+            } else {
+                cout << "-- Error modifying records." << endl;
+                tableInUse.close();
+                tempFile.close();
+                remove(tempPath.c_str());
+                return false;
+            }
             break;
         case '=':
             if (firstLine.find(dataName) != string::npos) {
@@ -906,84 +1023,9 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
             break;
     }
 
+    tableInUse.close();
+    tempFile.close();
+    remove(tempPath.c_str());
     return true;
 
 }
-            // float numData = stof(data);
-            // if (firstLine.find(dataName) != string::npos) {
-            //     cout << "outer loop" << endl;
-            //     tempFile << firstLine;
-            //     while (getline(tableInUse, line)) {
-            //         cout << "inner loop" << endl;
-            //         if (line.find(data) != string::npos) {
-            //             counter++;
-            //         } else {
-            //             tempFile << endl << line;
-            //         }
-            //     }
-            //     tableInUse.close();
-            //     tempFile.close();
-            //     remove(totalPath.c_str());
-            //     rename(tempPath.c_str(), totalPath.c_str());
-            //     if (counter == 1) {
-            //         cout << "-- " << counter << " record modified" << endl;
-            //     } else {
-            //         cout << "-- " << counter << " records modified" << endl;
-            //     }
-            // } else {
-            //     cout << "-- Error modifying records." << endl;
-            //     tableInUse.close();
-            //     tempFile.close();
-            //     remove(tempPath.c_str());
-            //     return false;
-            // }
-            // break;
-            // if (firstLine.find(dataName) != string::npos) {
-                
-            //     cout << "outer loop" << endl;
-            //     tempFile << firstLine;
-
-            //     while (getline(tableInUse, line)) {
-
-            //         cout << "inner loop" << endl;
-            //         istringstream iss(line);
-            //         while (!(iss >> found).fail()) {
-
-            //             cout << "found int: " << found << endl;
-
-            //             // ss << tempToken;
-            //             // cout << "temptoken: " << tempToken << endl;
-
-            //             // if (stringstream(tempToken) >> found) {
-
-            //             //     cout << "found int: " << found << endl;
-
-            //             //     if (found > numData) {
-            //             //         counter++;
-            //             //     } else {
-            //             //         tempFile << endl << line;
-            //             //     }
-            //             // }
-            //             // tempToken = "";
-            //             // ss.str(string());
-
-            //         }
-
-            //     }
-
-            //     tableInUse.close();
-            //     tempFile.close();
-            //     remove(totalPath.c_str());
-            //     rename(tempPath.c_str(), totalPath.c_str());
-            //     if (counter == 1) {
-            //         cout << "-- " << counter << " record modified" << endl;
-            //     } else {
-            //         cout << "-- " << counter << " records modified" << endl;
-            //     }
-            // } else {
-            //     cout << "-- Error modifying records." << endl;
-            //     tableInUse.close();
-            //     tempFile.close();
-            //     remove(tempPath.c_str());
-            //     return false;
-            // }
