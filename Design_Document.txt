@@ -130,7 +130,7 @@ Implementation of Functionalities:
         from the user. If it returns true (table does exist in database), the table is deleted, the function ends, the
         nowUsing() loop continues, and the terminal is ready for another command from the user.
 
-    Table update -- consists of altering the table by tokenizing the user input, processing the type of update being 
+    Table update (ALTER) -- consists of altering the table by tokenizing the user input, processing the type of update being 
         requested, and updating the table based on the request. The inputted command from user is stored as an array 
         and passed into the tokenize() function. This function tokenizes the input and stores the first token as a 
         string. This string is checked to see if we are using a database, or if we are operating outside of a database. 
@@ -184,10 +184,111 @@ Implementation of Functionalities:
         database in use is passed to the function select(). The next three tokens are stored as individual string
         variables and the semicolon is removed from the last one. The path to the table is created by concatenating
         the database in use's name, a forward slash '/', the table name, and the file type '.txt'. The first token
-        is compared to the functionalities available (*) and the second token is compared to the functionalities
-        available (FROM). If they are not equal, an error message displays, the function finishes and the terminal 
-        is ready for another command from the user. If they are equal, the table path is passed to the function
-        tableExists(). If it returns false (table does not exist), an error message displays, the function finishes 
-        and the terminal is ready for another command from the user. If it returns true (table exists), the contents
-        of the file is displayed to the terminal, the the function finishes and the terminal is ready for another 
-        command from the user.
+        is compared to the functionalities available (* or else{ }). If the first token is '*', then the second token 
+        is compared to the functionalities available (FROM). If they are not equal, an error message displays, the 
+        function finishes and the terminal is ready for another command from the user. If they are equal, the table 
+        path is passed to the function tableExists(). If it returns false (table does not exist), an error message 
+        displays, the function finishes and the terminal is ready for another command from the user. If it returns 
+        true (table exists), the contents of the file is displayed to the terminal, the the function finishes and 
+        the terminal is ready for another command from the user. If the first token is not '*', then the next tokens
+        are parsed from useLoopTokens and stored in string variables. These are then formatted and passed to the
+        function printSelect. The data names of the table headers being printed are stored in an array and, the
+        length of said array is passed to printSelect as well. Print select effectively parses through the the first
+        line of the original table and finds the indexes of each data name of the table header that is being used.
+        This information is then stored and every subsequent line of the original table is looped through and
+        processed line by line. The processing of the lines includes finding the data at each index of the data
+        of the header table being used and checks if there's a match and if it will be printed. At the end, the
+        correct data is printed to the screen and the terminal is ready for another command.
+
+    Tuple update -- consists of selecting the table by tokenizing the user input, processing what is being requested to
+        select, and then displaying what has been requested. The inputted command from user is stored as an array and 
+        passed into the tokenize() function. This function tokenizes the input and stores the first token as a string. 
+        This string is checked to see if we are using a database, or if we are operating outside of a database. If the 
+        user has not previously selected a database to be operating in, table creation will not succeed because it 
+        will go into the notUsing() function which does not have table making capabilities because one can only create 
+        a table if opeating inside of database. If a database has been selected to be in use previously, the command 
+        USE "database name" would have been used which would return true to the first if statement in tokenize(). The 
+        next token is then stored as a string and the semicolon ';' is removed. This string is then passed into the 
+        function databaseExists() which returns true if the database exists. If it returns false, it falls to the 
+        else { } of the second if/else statement and an error message is displayed and tokenize boolean is returned 
+        as false. The terminal is then ready for another command from the user. If it returns true, a success message 
+        is displayed, and the string with the database name stored is passed to the function nowUsing(). In the 
+        nowUsing() function, a boolean and char array is initialized. A while loop with the previously declared 
+        boolean as it's condition begins. This while loop prompts the user for another command from the terminal and 
+        stores it in the char array. This is then tokenized and the first token is stored as a string. The semicolon
+        ';' is removed from the token if it exists and the token is then compared to the functionalities available 
+        while operating within a database. If the token is equal to "update", then the tokens and the name of the 
+        database in use is passed to the function update(). The next token is then saved to tbName and the total path 
+        of the table is created. This path is then passed to tableExists(). If it exists, the rest of the tokens are
+        parsed and stored as a string variable. These strings are then formatted, the table in use is opened, and
+        a temporary table is created and opened. The first line of the table in use is stored to a variable name and
+        if the data names that the user inputted are in it, a string stream is create and the first line is passed to
+        it. This string is then processed and the position of the data name inputted by the user is saved to an int
+        variable. The first line is then passed into the temporary table and the rest of the lines in the table in use
+        are processed line by line. These lines are updated with the information requested by the user, if possible,
+        and are then passed into the temporary table. When this is complete, the original table is deleted, the
+        temporary table is renamed to the original table path, and the table is closed. Either a success or failure
+        message is displayed to the screen.
+
+    Tuple insertion -- consists of selecting the table by tokenizing the user input, processing what is being requested to
+        select, and then displaying what has been requested. The inputted command from user is stored as an array and 
+        passed into the tokenize() function. This function tokenizes the input and stores the first token as a string. 
+        This string is checked to see if we are using a database, or if we are operating outside of a database. If the 
+        user has not previously selected a database to be operating in, table creation will not succeed because it 
+        will go into the notUsing() function which does not have table making capabilities because one can only create 
+        a table if opeating inside of database. If a database has been selected to be in use previously, the command 
+        USE "database name" would have been used which would return true to the first if statement in tokenize(). The 
+        next token is then stored as a string and the semicolon ';' is removed. This string is then passed into the 
+        function databaseExists() which returns true if the database exists. If it returns false, it falls to the 
+        else { } of the second if/else statement and an error message is displayed and tokenize boolean is returned 
+        as false. The terminal is then ready for another command from the user. If it returns true, a success message 
+        is displayed, and the string with the database name stored is passed to the function nowUsing(). In the 
+        nowUsing() function, a boolean and char array is initialized. A while loop with the previously declared 
+        boolean as it's condition begins. This while loop prompts the user for another command from the terminal and 
+        stores it in the char array. This is then tokenized and the first token is stored as a string. The semicolon
+        ';' is removed from the token if it exists and the token is then compared to the functionalities available 
+        while operating within a database. If the token is equal to "insert", then the tokens and the name of the 
+        database in use is passed to the function insert(). The next token which points to the table name is then
+        stored as a string variables. If it is equal to "into", then the next token is saved to tbName and the total path
+        of the table is stored as a string variable. The next token is stored and if it is equal to "values" then the
+        next one is stored as well. The rest of the tokens after values are stored to a single string variable and
+        formatted to the table. This is then appended with a "\n" to the end of the table and the table is closed.
+        Either a success or failure message is displayed to the screen. and the terminal is ready for new user commands.
+
+    Tuple deletion -- consists of selecting the table by tokenizing the user input, processing what is being requested to
+        select, and then displaying what has been requested. The inputted command from user is stored as an array and 
+        passed into the tokenize() function. This function tokenizes the input and stores the first token as a string. 
+        This string is checked to see if we are using a database, or if we are operating outside of a database. If the 
+        user has not previously selected a database to be operating in, table creation will not succeed because it 
+        will go into the notUsing() function which does not have table making capabilities because one can only create 
+        a table if opeating inside of database. If a database has been selected to be in use previously, the command 
+        USE "database name" would have been used which would return true to the first if statement in tokenize(). The 
+        next token is then stored as a string and the semicolon ';' is removed. This string is then passed into the 
+        function databaseExists() which returns true if the database exists. If it returns false, it falls to the 
+        else { } of the second if/else statement and an error message is displayed and tokenize boolean is returned 
+        as false. The terminal is then ready for another command from the user. If it returns true, a success message 
+        is displayed, and the string with the database name stored is passed to the function nowUsing(). In the 
+        nowUsing() function, a boolean and char array is initialized. A while loop with the previously declared 
+        boolean as it's condition begins. This while loop prompts the user for another command from the terminal and 
+        stores it in the char array. This is then tokenized and the first token is stored as a string. The semicolon
+        ';' is removed from the token if it exists and the token is then compared to the functionalities available 
+        while operating within a database. If the token is equal to "delete", then the tokens and the name of the 
+        database in use is passed to the function deleteData(). The next token which points to the table name is then
+        stored as a string variables. If it is equal to "from", then the next token is saved to tbName and the total path
+        of the table is stored as a string variable. The next token is stored and if it is equal to "where" then the
+        next three are stored as well. These are then formatted and the totalPath of the table is passed to tableExists().
+        If it returns true, then all of the formatted tokens are passed to modifyTable(). In modifyTable(), the totalPath
+        table is opened and a new temporary table is created and opened. The first line from the original table is stored
+        to a string variable and the indexes of the data name which will be processed for modification is saved. The
+        operand string is then processed with a switch statement which decides what process to follow. If operand == '>',
+        the first line is passed to a string stream and the words are processed one at a time. If the float variable
+        is greater than that of the user input, the line is not added to the temporary table. If the float variable
+        is less than that of the user input, the line is added to the temporary table. When there are no more lines to
+        process, the original table is deleted, the temporary table is renamed to the original table, and the table is
+        closed. Either a success or failure message is displayed to the screen. If the operand == '<', the opposite
+        comparison is made with the the inputted float and the float in the table. If the operand == '=', the first line
+        is stored in the temporary table, and each subsequent line is processed to see if there is data that equals that
+        of the inputted data. If the data is found in a line, that line is not passed to the temporary table. If the data
+        is not found in a line, then the line is passed to the temporary table. Once all lines have been processed, the
+        original table is deleted, the new table is renamed to the name of the original table, and the table is closed.
+        Either a success or failure message is displayed to the screen and the terminal is ready for new user commands.
