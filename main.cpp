@@ -51,6 +51,26 @@ int main() {
         exit = tokenize(userInput);
     }
 
+    // bool exit = false;
+    // char userInput[200];
+    
+    // cout << "-- CS457 PA2" << endl << endl;
+
+    // while(exit == false) {
+
+    //     cin.getline(userInput, 200);
+    //     string temp1 = strtok(userInput, 200);
+
+    //     string temp2;
+    //     while((temp2 = strtok(NULL, " ")) != string::npos) {
+    //         temp1 = temp1 + " " + temp2;
+    //         if
+    //     }
+        
+    //     // exit = tokenize(userInput);
+
+    // }
+
     return 0;
 }
 
@@ -617,6 +637,11 @@ void select(char* useLoopTokens, string dbName) {
         string dataArray[200];
         size_t found;
 
+        bool exitLoop = false;
+        char nextLine[200];
+        string tempNextLine;
+        string finalLine;
+
         // reference the last character of string and check if equal to ','
         while (selectCheck.back() == ',') {
             // remove the ',' characters
@@ -637,40 +662,65 @@ void select(char* useLoopTokens, string dbName) {
         dataArray[dataCounter] = selectCheck;
         dataCounter++;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* fromToken = useLoopTokens;
+        while (exitLoop == false) {
+            // get each inputted line and pass into string stream
+            getline(cin, tempNextLine);
+            istringstream issNextLine(tempNextLine);
+            // if the last word in stream doesn't end with ';', add to finalLine
+            if (tempNextLine.find(";") == string::npos) {
+                finalLine = finalLine + " " + tempNextLine;
+            } else {
+                // remove the ';', add the word to finalLine, exit the loop
+                size_t pos;
+                while ((pos = tempNextLine.find(";")) != string::npos) {
+                    tempNextLine.replace(pos, 1, "");
+                }
+                finalLine = finalLine + " " + tempNextLine;
+                exitLoop = true;
+            }
+        }
+ 
+        int n = finalLine.length();
+        // declaring character array
+        char char_array[n+1];
+    
+        // copying the contents of the finalLine to char array
+        strcpy(char_array, finalLine.c_str());
+
+        // get next token in newLineTokens
+        char* newLineTokens = strtok(char_array, " ");
+        char* fromToken = newLineTokens;
         string strFromToken = fromToken;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* tbToken = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* tbToken = newLineTokens;
         string tbName = tbToken;
 
         // create total path to table name with database name in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* whereToken = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* whereToken = newLineTokens;
         string strWhereToken = whereToken;
 
         // only command available currently
         if (strWhereToken == "where") {
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* dataNameToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* dataNameToken = newLineTokens;
             string dataName = dataNameToken;
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* operandToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* operandToken = newLineTokens;
             string operand = operandToken;
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* dataToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* dataToken = newLineTokens;
             string data = dataToken;
 
             // remove ';' from data variable
@@ -892,57 +942,85 @@ void update(char* useLoopTokens, string useDBName) {
     string tempToken;
     string line;
 
+    bool exitLoop = false;
+    char nextLine[200];
+    string tempNextLine;
+    string finalLine;
+
     // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* charTBName = useLoopTokens;
     string tbName = charTBName;
-
+    
     // create the total path to table given database in use
     string totalPath = useDBName + "/" + tbName + ".txt";
+    
+    while (exitLoop == false) {
+        // get each inputted line and pass into string stream
+        getline(cin, tempNextLine);
+        istringstream issNextLine(tempNextLine);
+        // if the last word in stream doesn't end with ';', add to finalLine
+        if (tempNextLine.find(";") == string::npos) {
+            finalLine = finalLine + " " + tempNextLine;
+        } else {
+            // remove the ';', add the word to finalLine, exit the loop
+            size_t pos;
+            while ((pos = tempNextLine.find(";")) != string::npos) {
+                tempNextLine.replace(pos, 1, "");
+            }
+            finalLine = finalLine + " " + tempNextLine;
+            exitLoop = true;
+        }
+    }
+ 
+    int n = finalLine.length();
+    // declaring character array
+    char char_array[n+1];
+ 
+    // copying the contents of the finalLine to char array
+    strcpy(char_array, finalLine.c_str());
 
     bool exists = tableExists(totalPath);
 
     // if table already exists
     if (exists) {
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charSetToken = useLoopTokens;
-        string setToken = charSetToken;
+        char* newLineTokens = strtok(char_array, " ");
+        string setToken = newLineTokens;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charDataNameToBeChanged = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charDataNameToBeChanged = newLineTokens;
         string dataNameToBeChanged = charDataNameToBeChanged;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charFirstOperand = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charFirstOperand = newLineTokens;
         string firstOperand = charFirstOperand;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charDataToBeSet = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charDataToBeSet = newLineTokens;
         string dataToBeSet = charDataToBeSet;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charWhere = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charWhere = newLineTokens;
         string whereToken = charWhere;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charDataNameFinding = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charDataNameFinding = newLineTokens;
         string dataNameFinding = charDataNameFinding;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charSecondOperand = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charSecondOperand = newLineTokens;
         string secondOperand = charSecondOperand;
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* charDataToBeChanged = useLoopTokens;
+        // get next token in newLineTokens
+        newLineTokens = strtok(NULL, " ");
+        char* charDataToBeChanged = newLineTokens;
         string dataToBeChanged = charDataToBeChanged;
 
         // format the dataToBeChanged by removing the ';' from the end
@@ -1210,6 +1288,11 @@ void insert(char* useLoopTokens, string dbName) {
 */
 void deleteData(char* useLoopTokens, string dbName) {
 
+    bool exitLoop = false;
+    char nextLine[200];
+    string tempNextLine;
+    string finalLine;
+
     // get next token in useLoopTokens
     useLoopTokens = strtok(NULL, " ");
     char* fromToken = useLoopTokens;
@@ -1226,27 +1309,52 @@ void deleteData(char* useLoopTokens, string dbName) {
         // create the total path to the table from database in use
         string totalPath = dbName + "/" + tbName + ".txt";
 
-        // get next token in useLoopTokens
-        useLoopTokens = strtok(NULL, " ");
-        char* whereToken = useLoopTokens;
+        while (exitLoop == false) {
+            // get each inputted line and pass into string stream
+            getline(cin, tempNextLine);
+            istringstream issNextLine(tempNextLine);
+            // if the last word in stream doesn't end with ';', add to finalLine
+            if (tempNextLine.find(";") == string::npos) {
+                finalLine = finalLine + " " + tempNextLine;
+            } else {
+                // remove the ';', add the word to finalLine, exit the loop
+                size_t pos;
+                while ((pos = tempNextLine.find(";")) != string::npos) {
+                    tempNextLine.replace(pos, 1, "");
+                }
+                finalLine = finalLine + " " + tempNextLine;
+                exitLoop = true;
+            }
+        }
+ 
+        int n = finalLine.length();
+        // declaring character array
+        char char_array[n+1];
+    
+        // copying the contents of the finalLine to char array
+        strcpy(char_array, finalLine.c_str());
+
+        // get next token in newLineTokens
+        char* newLineTokens = strtok(char_array, " ");
+        char* whereToken = newLineTokens;
         string pointToValue = whereToken;
 
         // only command available currently
         if (pointToValue == "where") {
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* dataNameToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* dataNameToken = newLineTokens;
             string dataName = dataNameToken;
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* operatorToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* operatorToken = newLineTokens;
             string operand = operatorToken;
 
-            // get next token in useLoopTokens
-            useLoopTokens = strtok(NULL, " ");
-            char* dataToken = useLoopTokens;
+            // get next token in newLineTokens
+            newLineTokens = strtok(NULL, " ");
+            char* dataToken = newLineTokens;
             string data = dataToken;
 
             // find ';' in data and remove
@@ -1470,9 +1578,9 @@ bool modifyTable(string dbName, string totalPath, string dataName, string operan
                 remove(totalPath.c_str());
                 rename(tempPath.c_str(), totalPath.c_str());
                 if (counter == 1) {
-                    cout << "-- " << counter << " record modified" << endl;
+                    cout << "-- " << counter << " record deleted" << endl;
                 } else {
-                    cout << "-- " << counter << " records modified" << endl;
+                    cout << "-- " << counter << " records deleted" << endl;
                 }
             } else {
                 cout << "-- Error modifying records." << endl;
